@@ -1,0 +1,18 @@
+SRC=../src
+LDFLAGS+=-lrt
+CXXFLAGS+=-I../../seqan-src/include
+CXXFLAGS+=-I../../seqan-src/include
+
+default: all
+all: isomorph
+
+isomorph: main.o
+	$(CXX) $(LDFLAGS) -o isomorph main.o
+
+main.o: $(SRC)/main.cpp
+	$(CXX) $(CXXFLAGS) -c -o main.o $(SRC)/main.cpp
+
+clean:
+	rm -f main.o isomorph
+
+.PHONY: default all clean

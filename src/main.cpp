@@ -1,11 +1,14 @@
-#include <cstdio>
 #include <iostream>
-using namespace std;
 
+#include <seqan/stream.h>
+#include <seqan/basic.h>
+#include <seqan/file.h>
+#include <seqan/sequence.h>
 
-int main(void) {
-    
+using namespace seqan;
+
+int main() {
+	std::cout << CharString("Hello SeqAn!") << std::endl;
     return 0;
 }
-
 
