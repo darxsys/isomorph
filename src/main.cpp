@@ -14,6 +14,9 @@ using namespace seqan;
 int main(int argc, char** argv) {
     ArgumentParser parser("isomorph");
 
+    addArgument(parser, seqan::ArgParseArgument(
+            seqan::ArgParseArgument::STRING, "TEXT"));
+
     addOption(parser, ArgParseOption(
         "L", "left", "Left read pairs.",
         ArgParseArgument::STRING, "STRING"));
