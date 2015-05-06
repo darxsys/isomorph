@@ -1,18 +1,33 @@
-SRC=../src
+CXX=g++
+LD=g++
+DX=doxygen
+
+NAME=isomorph
+
+SRC_DIR=../src
+OBJ_DIR=../obj
+
+SRC = $(shell find $(SRC_DIR) -type f -regex ".*\.\(cu\|c\|cpp\)")
+OBJ = $(subst $(SRC_DIR), $(OBJ_DIR), $(addsuffix .o, $(basename $(SRC))))
+
+
 LDFLAGS+=-lrt
 CXXFLAGS+=-I../../seqan-src/include
 CXXFLAGS+=-I../../seqan-src/include
 
 default: all
-all: isomorph
+all: $(NAME)
 
-isomorph: main.o
-	$(CXX) $(LDFLAGS) -o isomorph main.o
+$(NAME): $(OBJ)
+	@echo [LD] $@
+	@$(LD) $(OBJ) -o $@ $(LD_FLAGS)
 
-main.o: $(SRC)/main.cpp
-	$(CXX) $(CXXFLAGS) -c -o main.o $(SRC)/main.cpp
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
+	@echo [CC] $<
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 clean:
-	rm -f main.o isomorph
+	rm $(OBJ_DIR) $(NAME) -rf
 
 .PHONY: default all clean
