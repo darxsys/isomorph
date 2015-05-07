@@ -4,16 +4,28 @@
 #include<string>
 #include<seqan/seq_io.h>
 
-class Reader {
+namespace isomorph {
+    struct FastQData {
+        StringSet<CharString> ids;
+        StringSet<Dna5String> seqs;
+        StringSet<CharString> phred;
+    };
+
+    struct FastAData {
+        StringSet<CharString> ids;
+        StringSet<Dna5String> seqs;
+    };
+
+    std::string execute_command(const char* cmd);
+
+    class Reader {
     public:
-    int read_sam(std::string filename); 
-    int read_fasta(std::string filename,
-                   StringSet<CharString>* ids,
-                   StringSet<Dna5String>* seqs);
-    int read_fastq(std::string filename,
-                   StringSet<CharString>* ids,
-                   StringSet<Dna5String>* seqs,
-                   StringSet<CharString>* phred);
-};
+        int read_sam(std::string filename); 
+        int read_fasta(CharString filename,
+                       FastAData* data);
+        int read_fastq(CharString filename,
+                       FastQData* data);
+    };
+}
 
 #endif // UTILITY_H

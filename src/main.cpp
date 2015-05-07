@@ -36,6 +36,7 @@ int main(int argc, char** argv) {
     CharString left_file = "";
     CharString right_file = "";
     CharString transcripts = "";
+
     getOptionValue(left_file, parser, "left");
     getOptionValue(right_file, parser, "right");
     getOptionValue(transcripts, parser, "transcripts");
