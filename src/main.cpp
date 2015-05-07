@@ -25,7 +25,8 @@ int main(int argc, char** argv) {
         "R", "right", "Right read pairs.",
         ArgParseArgument::STRING, "STRING"));
     addOption(parser, ArgParseOption(
-        "T", "transcripts", "Transcript file."));
+        "T", "transcripts", "Transcript file.",
+        ArgParseArgument::STRING, "STRING"));
 
     ArgumentParser::ParseResult res = parse(parser, argc, argv);
 

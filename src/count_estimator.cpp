@@ -29,14 +29,14 @@ void isomorph::CountEstimator::estimate_abundances(CharString left_pairs,
     string transcripts_str(toCString(transcripts)); 
     string left_pairs_str(toCString(left_pairs));
     string right_pairs_str(toCString(right_pairs));
-    
+
     // builds bowtie index
     string command = "bowtie2-build " + transcripts_str + " isomorph-index";
     execute_command(command.c_str());
 
     // run alignment
     command = "bowtie2 -x isomorph-index -1 " + left_pairs_str + " -2 " +
-              toCString(right_pairs_str) + "-S isomorph.sam";
+              toCString(right_pairs_str) + " -S isomorph.sam";
     execute_command(command.c_str());
 
     // read sam data
