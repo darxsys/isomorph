@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <vector>
 
 #include <seqan/bam_io.h>
 #include <seqan/seq_io.h>
@@ -25,23 +26,30 @@ std::string isomorph::execute_command(const char* cmd) {
     return result;    
 }
 
-int isomorph::Reader::read_sam(std::string filename) {
-    BamFileIn samFile(filename.c_str());
-    BamHeader header;
-    
-    BamFileOut bamFileOut;
-    open(bamFileOut, "example.bam");
-
-    readHeader(header, samFile);
-    writeHeader(bamFileOut, header);
-    BamAlignmentRecord record;
-
-    while (!atEnd(samFile)) {
-        readRecord(record, samFile);
-        writeRecord(bamFileOut, record);
+int isomorph::Reader::read_sam(CharString filename,
+                               SamData* data) {
+    BamFileIn samFileIn;
+    if (!open(samFileIn, toCString(filename))) {
+        std::cerr << "ERROR: Could not open the file " << filename << std::endl;
+        return 1;
     }
 
-    return 1;
+    try {
+        BamHeader header;
+        
+        readHeader(data->header, samFileIn);
+        BamAlignmentRecord record;
+
+        while (!atEnd(samFileIn)) {
+            readRecord(record, samFileIn);
+            data->records.emplace_back(record);
+        }
+    } catch (Exception const & e) {
+        std::cout << "ERROR:" << e.what() << std::endl;
+        return 1;
+    }
+
+    return 0;
 }
 
 /* 

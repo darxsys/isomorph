@@ -1,0 +1,2 @@
+1) doraditi for loop u countu, moze brze sigurno
+2) pogledat ostale stvari kod iteracije

@@ -30,15 +30,40 @@ void isomorph::CountEstimator::estimate_abundances(CharString left_pairs,
     string left_pairs_str(toCString(left_pairs));
     string right_pairs_str(toCString(right_pairs));
 
+    string dir = "mkdir -p bowtie-tmp";
+    execute_command(dir.c_str());
+
     // builds bowtie index
-    string command = "bowtie2-build " + transcripts_str + " isomorph-index";
+    string command = "bowtie2-build " + transcripts_str + " " + dir + "/isomorph-index";
     execute_command(command.c_str());
 
-    // run alignment
-    command = "bowtie2 -x isomorph-index -1 " + left_pairs_str + " -2 " +
-              toCString(right_pairs_str) + " -S isomorph.sam";
+    // runs the alignment
+    command = "bowtie2 -x " + dir + "/isomorph-index -1 " + left_pairs_str + " -2 " +
+              toCString(right_pairs_str) + " -S " + dir + "/isomorph.sam";
     execute_command(command.c_str());
 
-    // read sam data
+    // reads sam data
+    isomorph::SamData sam_data;
+    CharString sam("isomorph.sam");
+    reader.read_sam(sam, &sam_data);
 
+    // calculates the counts
+    auto ids = transcript_data.ids;
+    for (int i = 0; i < length(ids); ++i) {
+        auto id = ids[i];
+        long long count = 0;
+
+        auto records = sam_data.records;
+        for (int j = 0; j < length(records); ++j) {
+            if (records[j].rID == i) {
+                count++;
+            }
+        }
+
+        cout << id << '\n' << count << endl;
+    }
+
+    // cleaning up
+    string rm = "rm -rf " + dir;
+    execute_command(rm.c_str());
 }
