@@ -9,6 +9,7 @@
 using namespace std;
 using namespace seqan;
 
+#include "count_estimator.h"
 #include "utility.h"
 
 int main(int argc, char** argv) {
@@ -44,6 +45,9 @@ int main(int argc, char** argv) {
     cout << "left_file \t" << left_file << '\n'
          << "right file \t" << right_file << '\n'
          << "transcripts \t" << transcripts << endl;
+
+    isomorph::CountEstimator estimator;
+    estimator.estimate_abundances(left_file, right_file, transcripts);
 
     return 0;
 }
