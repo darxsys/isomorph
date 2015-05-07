@@ -33,7 +33,7 @@ void isomorph::CountEstimator::estimate_abundances(CharString left_pairs,
 
     string dir = "bowtie-tmp";
     string mkdir = "mkdir -p " + dir;
-    execute_command(dir.c_str());
+    execute_command(mkdir.c_str());
 
     // builds bowtie index
     string command = "bowtie2-build " + transcripts_str + " " + dir + "/isomorph-index";
