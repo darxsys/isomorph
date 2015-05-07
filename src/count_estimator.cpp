@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 
 #include <seqan/arg_parse.h>
 #include <seqan/stream.h>
@@ -49,18 +50,17 @@ void isomorph::CountEstimator::estimate_abundances(CharString left_pairs,
 
     // calculates the counts
     auto ids = transcript_data.ids;
-    for (int i = 0; i < length(ids); ++i) {
-        auto id = ids[i];
-        long long count = 0;
+    vector<long long> counts(length(ids), 0);
+    auto records = sam_data.records;
 
-        auto records = sam_data.records;
-        for (int j = 0; j < length(records); ++j) {
-            if (records[j].rID == i) {
-                count++;
-            }
+    for (int j = 0; j < length(records); ++j) {
+        if (records[j].rID >= 0) {
+            counts[records[j].rID]++;
         }
+    }
 
-        cout << id << '\n' << count << endl;
+    for (int i = 0; i < counts.size(); ++i) {
+        cout << ids[i] << '\n' << counts[i] << endl;
     }
 
     // cleaning up
