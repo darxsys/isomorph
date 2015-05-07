@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <unordered_set>
 
 #include <seqan/arg_parse.h>
 #include <seqan/stream.h>
@@ -46,17 +47,20 @@ void isomorph::CountEstimator::estimate_abundances(CharString left_pairs,
 
     // reads sam data
     isomorph::SamData sam_data;
-    CharString sam("isomorph.sam");
+    CharString sam(dir + "/isomorph.sam");
     reader.read_sam(sam, &sam_data);
 
     // calculates the counts
     auto ids = transcript_data.ids;
     vector<long long> counts(length(ids), 0);
     auto records = sam_data.records;
+    unordered_set<string> used_reads;
 
     for (int j = 0; j < length(records); ++j) {
-        if (records[j].rID >= 0) {
+        if (records[j].rID >= 0 and 
+            used_reads.find(toCString(records[j].qName)) == used_reads.end()) {
             counts[records[j].rID]++;
+            used_reads.insert(toCString(records[j].qName));
         }
     }
 
