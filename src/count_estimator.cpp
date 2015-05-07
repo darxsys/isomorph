@@ -31,7 +31,8 @@ void isomorph::CountEstimator::estimate_abundances(CharString left_pairs,
     string left_pairs_str(toCString(left_pairs));
     string right_pairs_str(toCString(right_pairs));
 
-    string dir = "mkdir -p bowtie-tmp";
+    string dir = "bowtie-tmp";
+    string mkdir = "mkdir -p " + dir;
     execute_command(dir.c_str());
 
     // builds bowtie index
