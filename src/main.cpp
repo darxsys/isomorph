@@ -11,6 +11,9 @@ using namespace seqan;
 
 #include "count_estimator.h"
 #include "utility.h"
+#include "rsem_estimator.h"
+
+using namespace isomorph;
 
 int main(int argc, char** argv) {
     ArgumentParser parser("isomorph");
@@ -47,7 +50,7 @@ int main(int argc, char** argv) {
          << "right file \t" << right_file << '\n'
          << "transcripts \t" << transcripts << endl;
 
-    isomorph::CountEstimator estimator;
+    RsemEstimator estimator;
     estimator.estimate_abundances(left_file, right_file, transcripts);
 
     return 0;
