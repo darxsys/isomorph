@@ -15,10 +15,8 @@ using namespace std;
 #include "count_estimator.h"
 #include "utility.h"
 
-void isomorph::CountEstimator::estimate_abundances(CharString left_pairs,
-                                                   CharString right_pairs,
-                                                   CharString transcripts) {
-
+void isomorph::RsemEstimator::estimate_abundances(CharString left_pairs, CharString right_pairs,
+                                                  CharString transcripts) {
     isomorph::Reader reader;
     isomorph::FastQData left_data;
     isomorph::FastQData right_data;
@@ -50,26 +48,15 @@ void isomorph::CountEstimator::estimate_abundances(CharString left_pairs,
     CharString sam(dir + "/isomorph.sam");
     reader.read_sam(sam, &sam_data);
 
-    // calculates the counts
-    auto ids = transcript_data.ids;
-    vector<long long> counts(length(ids), 0);
-    auto records = sam_data.records;
-    unordered_set<string> used_reads;
-
-    for (int j = 0; j < length(records); ++j) {
-        if (records[j].rID >= 0 and 
-                used_reads.find(toCString(records[j].qName)) == used_reads.end()) {
-
-            counts[records[j].rID]++;
-            used_reads.insert(toCString(records[j].qName));
-        }
+    for (auto align : sam_data.records) {
+        cout << align << endl;
     }
 
-    for (int i = 0; i < counts.size(); ++i) {
-        cout << ids[i] << '\n' << counts[i] << endl;
-    }
-
-    // cleaning up
-    string rm = "rm -rf " + dir;
-    execute_command(rm.c_str());
+    return;
 }
+
+void isomorph::RsemEstimator::preprocess_data() {
+
+}
+
+
