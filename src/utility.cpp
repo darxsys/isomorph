@@ -6,9 +6,9 @@
 #include <seqan/seq_io.h>
 #include <seqan/sequence.h>
 
-using namespace seqan;
-
 #include "utility.h"
+
+using namespace seqan;
 
 /*
     http://stackoverflow.com/questions/478898/how-to-execute-a-command-and-get-output-of-command-within-c
@@ -24,6 +24,22 @@ std::string isomorph::execute_command(const char* cmd) {
     }
     pclose(pipe);
     return result;    
+}
+
+void isomorph::print_sam_alignment_records(
+        const std::vector<BamAlignmentRecord>& records) {
+
+    for (auto record : records) {
+        std::cout << "###############" << std::endl;
+        std::cout << "Name: " << record.qName << std::endl;
+        std::cout << "Ref. ID: " << record.rID << std::endl;
+        std::cout << "flag: " << record.flag << std::endl;
+        std::cout << "rNextId: " << record.rNextId << std::endl;
+        std::cout << "Sequence: " << record.seq << std::endl;
+        std::cout << "###############" << std::endl;
+    }
+
+    return;
 }
 
 int isomorph::Reader::read_sam(CharString filename,

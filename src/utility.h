@@ -7,30 +7,35 @@
 
 namespace isomorph {
     struct FastQData {
-        StringSet<CharString> ids;
-        StringSet<Dna5String> seqs;
-        StringSet<CharString> phred;
+        seqan::StringSet<seqan::CharString> ids;
+        seqan::StringSet<seqan::Dna5String> seqs;
+        seqan::StringSet<seqan::CharString> phred;
     };
 
     struct FastAData {
-        StringSet<CharString> ids;
-        StringSet<Dna5String> seqs;
+        seqan::StringSet<seqan::CharString> ids;
+        seqan::StringSet<seqan::Dna5String> seqs;
     };
 
     struct SamData {
-        BamHeader header;
-        std::vector<BamAlignmentRecord> records;
+        seqan::BamHeader header;
+        std::vector<seqan::BamAlignmentRecord> records;
     };
 
     std::string execute_command(const char* cmd);
-
+    /*
+        Prints all the important attributes of sam alignment records.
+    */
+    void print_sam_alignment_records(
+            const std::vector<seqan::BamAlignmentRecord>& records);
+    
     class Reader {
     public:
-        int read_sam(CharString filename,
+        int read_sam(seqan::CharString filename,
                      SamData* data); 
-        int read_fasta(CharString filename,
+        int read_fasta(seqan::CharString filename,
                        FastAData* data);
-        int read_fastq(CharString filename,
+        int read_fastq(seqan::CharString filename,
                        FastQData* data);
     };
 }

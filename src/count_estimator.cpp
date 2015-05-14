@@ -15,22 +15,25 @@ using namespace std;
 #include "count_estimator.h"
 #include "utility.h"
 
-void isomorph::CountEstimator::estimate_abundances(CharString left_pairs,
-                                                   CharString right_pairs,
-                                                   CharString transcripts) {
-
+void isomorph::CountEstimator::estimate_abundances(CharString reads,
+                                                   CharString transcripts,
+                                                   CharString pairs) {
+    bool paired_end = pairs == "" ? false : true;
     isomorph::Reader reader;
-    isomorph::FastQData left_data;
-    isomorph::FastQData right_data;
-    isomorph::FastAData transcript_data;
+    isomorph::FastQData reads_data;
+    isomorph::FastQData pairs_data;
+    isomorph::FastAData transcripts_data;
 
-    reader.read_fastq(left_pairs, &left_data);
-    reader.read_fastq(right_pairs, &right_data);
-    reader.read_fasta(transcripts, &transcript_data);
+    reader.read_fastq(reads, &reads_data);
+    if (paired_end) {
+        reader.read_fastq(pairs, &pairs_data);
+    }
+
+    reader.read_fasta(transcripts, &transcripts_data);
 
     string transcripts_str(toCString(transcripts)); 
-    string left_pairs_str(toCString(left_pairs));
-    string right_pairs_str(toCString(right_pairs));
+    string left_pairs_str(toCString(reads));
+    string right_pairs_str(toCString(pairs));
 
     string dir = "bowtie-tmp";
     string mkdir = "mkdir -p " + dir;
@@ -41,8 +44,12 @@ void isomorph::CountEstimator::estimate_abundances(CharString left_pairs,
     execute_command(command.c_str());
 
     // runs the alignment
-    command = "bowtie2 -x " + dir + "/isomorph-index -1 " + left_pairs_str + " -2 " +
-              toCString(right_pairs_str) + " -S " + dir + "/isomorph.sam";
+    if (paired_end) {
+        command = "bowtie2 -x " + dir + "/isomorph-index -1 " + left_pairs_str + " -2 " +
+                toCString(right_pairs_str) + " -S " + dir + "/isomorph.sam";
+    } else {
+        command = "bowtie";
+    }
     execute_command(command.c_str());
 
     // reads sam data
@@ -51,7 +58,7 @@ void isomorph::CountEstimator::estimate_abundances(CharString left_pairs,
     reader.read_sam(sam, &sam_data);
 
     // calculates the counts
-    auto ids = transcript_data.ids;
+    auto ids = transcripts_data.ids;
     vector<long long> counts(length(ids), 0);
     auto records = sam_data.records;
     unordered_set<string> used_reads;

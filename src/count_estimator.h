@@ -7,8 +7,8 @@
 namespace isomorph {
     class CountEstimator : public Estimator {
     public:
-        virtual void estimate_abundances(CharString left_pairs, CharString right_pairs,
-                                         CharString transcripts);
+        virtual void estimate_abundances(seqan::CharString reads, seqan::CharString transcripts,
+                                         seqan::CharString pairs="");
     };
 }
 

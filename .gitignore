@@ -30,3 +30,6 @@
 *.swp
 
 isomorph
+
+*.bt2
+*.sam

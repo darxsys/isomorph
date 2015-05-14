@@ -6,26 +6,25 @@
 #include <seqan/file.h>
 #include <seqan/sequence.h>
 
-using namespace std;
-using namespace seqan;
-
 #include "count_estimator.h"
 #include "utility.h"
 #include "rsem_estimator.h"
 
+using namespace std;
+using namespace seqan;
 using namespace isomorph;
 
 int main(int argc, char** argv) {
     ArgumentParser parser("isomorph");
 
-    // addArgument(parser, seqan::ArgParseArgument(
-    //         seqan::ArgParseArgument::STRING, "TEXT"));
-
     addOption(parser, ArgParseOption(
-        "L", "left", "Left read pairs.",
+        "S", "single-end", "Use single-end reads. DEFAULT=false",
+        ArgParseArgument::INTEGER, "INTEGER"));
+    addOption(parser, ArgParseOption(
+        "R", "reads", "Reads file.",
         ArgParseArgument::STRING, "STRING"));
     addOption(parser, ArgParseOption(
-        "R", "right", "Right read pairs.",
+        "P", "pairs", "Read pairs, if applicable.",
         ArgParseArgument::STRING, "STRING"));
     addOption(parser, ArgParseOption(
         "T", "transcripts", "Transcript file.",
@@ -38,20 +37,24 @@ int main(int argc, char** argv) {
         return res == ArgumentParser::PARSE_ERROR;
     }
 
-    CharString left_file = "";
-    CharString right_file = "";
+    CharString read_file = "";
+    CharString pairs_file = "";
     CharString transcripts = "";
-
-    getOptionValue(left_file, parser, "left");
-    getOptionValue(right_file, parser, "right");
+    int use_single_end = 0;
+    
+    getOptionValue(use_single_end, parser, "single-end");
+    getOptionValue(read_file, parser, "reads");
+    if (use_single_end == 0) {
+        getOptionValue(pairs_file, parser, "pairs");
+    }
     getOptionValue(transcripts, parser, "transcripts");
 
-    cout << "left_file \t" << left_file << '\n'
-         << "right file \t" << right_file << '\n'
+    cout << "left_file \t" << read_file << '\n'
+         << "right file \t" << pairs_file << '\n'
          << "transcripts \t" << transcripts << endl;
 
     RsemEstimator estimator;
-    estimator.estimate_abundances(left_file, right_file, transcripts);
+    estimator.estimate_abundances(read_file, transcripts, pairs_file);
 
     return 0;
 }
