@@ -2,6 +2,9 @@
 #define UTILITY_H
 
 #include <string>
+#include <unordered_map>
+#include <vector>
+
 #include <seqan/seq_io.h>
 #include <seqan/bam_io.h>
 
@@ -23,12 +26,15 @@ namespace isomorph {
     };
 
     std::string execute_command(const char* cmd);
+
     /*
         Prints all the important attributes of sam alignment records.
     */
     void print_sam_alignment_records(
             const std::vector<seqan::BamAlignmentRecord>& records);
     
+
+
     class Reader {
     public:
         int read_sam(seqan::CharString filename,
