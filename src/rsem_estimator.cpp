@@ -2,7 +2,6 @@
 #include <vector>
 #include <unordered_set>
 
-#include <seqan/arg_parse.h>
 #include <seqan/stream.h>
 #include <seqan/basic.h>
 #include <seqan/file.h>
@@ -50,7 +49,7 @@ void isomorph::RsemEstimator::estimate_abundances(CharString reads, CharString t
         command = "bowtie2 -x " + dir + "/isomorph-index -1 " + reads_str + " -2 " +
                 toCString(pairs_str) + " -S " + dir + "/isomorph.sam";
     } else {
-        command = "bowtie2 -x " + dir + "/isomorph-index -r " + reads_str +
+        command = "bowtie2 --all -N 1 -L 25 -q -x " + dir + "/isomorph-index -U " + reads_str +
                 " -S " + dir + "/isomorph.sam";
     }
     execute_command(command.c_str());
@@ -63,14 +62,21 @@ void isomorph::RsemEstimator::estimate_abundances(CharString reads, CharString t
 
     // print_sam_alignment_records(sam_data.records);
     if (paired_end) {
-        preprocess_data(sam_data, transcripts_data, reads_data, pairs_data, params);
+        preprocess_data(sam_data, 
+                        transcripts_data, 
+                        reads_data, 
+                        pairs_data, 
+                        params);
     } else {
-        preprocess_data(sam_data, transcripts_data, reads_data, params);
+        preprocess_data(sam_data, 
+                        transcripts_data, 
+                        reads_data, 
+                        params);
     }
 
     // cleaning up
-    string rm = "rm -rf " + dir;
-    execute_command(rm.c_str());
+    // string rm = "rm -rf " + dir;
+    // execute_command(rm.c_str());
     return;
 }
 
@@ -84,15 +90,36 @@ void isomorph::RsemEstimator::preprocess_data(const SamData& alignments,
 
     int num_reads = length(reads.ids);
     int num_transcripts = length(transcripts.ids);
-    vector<short> v(num_reads, 0);
-    params.pi_x_n.insert(v, num_transcripts);
+
+    // this vector will also be used to indicate if a read has any good alignments.
+    vector<short> reads_info(num_reads, 0);
+    params.pi_x_n.insert(params.pi_x_n.begin(), 
+                         num_transcripts+1,
+                         reads_info);
     
-    // filter out alignments with more than 5 mismatches
-    for (auto record : alignments.records) {
-         
+    for (int i = 0; i < num_reads; ++i) {
+        params.qNameToID[toCString(reads.ids[i])] = i;
     }
 
+    // arange the alignments in the "neighboring matrix"
+    for (auto record : alignments.records) {
+        string qName = toCString(record.qName);
+        int read_id = params.qNameToID[qName];
 
+        if (record.rID != record.INVALID_REFID) {
+            reads_info[read_id] = true;
+            params.pi_x_n[record.rID][read_id] = 1;
+        } 
+    }
+    
+    // all the reads that have no good alignment are assigned to dummy isoform
+    for (int i = 0; i < num_reads; ++i) {
+        if (!reads_info[i]) {
+            params.pi_x_n[num_transcripts][i] = 1;
+        }
+    }
+
+    return;
 }
 
 /*

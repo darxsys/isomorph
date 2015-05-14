@@ -10,11 +10,10 @@
 namespace isomorph {
     
     struct EMParams {
-        // needed because of bamalignmentrecords
         std::unordered_map<std::string, int> qNameToID;
         std::vector<std::vector<short> > pi_x_n;
-        std::vector<FastAData*> reads;
-        std::vector<FastAData*> transcripts;
+        FastAData reads;
+        FastAData transcripts;
     };
 
     class RsemEstimator : public Estimator {
