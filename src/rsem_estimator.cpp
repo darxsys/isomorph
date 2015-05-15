@@ -23,7 +23,7 @@ void isomorph::RsemEstimator::estimate_abundances(CharString reads, CharString t
     isomorph::FastQData pairs_data;
     isomorph::FastAData transcripts_data;
 
-    cout << reads << " " << transcripts << " " << pairs << endl;
+    cerr << reads << " " << transcripts << " " << pairs << endl;
 
     reader.read_fastq(reads, &reads_data);
     if (paired_end) {
@@ -73,10 +73,13 @@ void isomorph::RsemEstimator::estimate_abundances(CharString reads, CharString t
                         reads_data, 
                         params);
     }
+    
+    EMResult result;
+//    EMAlgorithm(params, result);
 
     // cleaning up
-    // string rm = "rm -rf " + dir;
-    // execute_command(rm.c_str());
+    string rm = "rm -rf " + dir;
+    execute_command(rm.c_str());
     return;
 }
 
@@ -85,7 +88,8 @@ void isomorph::RsemEstimator::estimate_abundances(CharString reads, CharString t
 
 */
 void isomorph::RsemEstimator::preprocess_data(const SamData& alignments,
-                                              const FastAData& transcripts, const FastQData& reads, 
+                                              const FastAData& transcripts, 
+                                              const FastQData& reads, 
                                               EMParams& params) {
 
     int num_reads = length(reads.ids);
@@ -97,21 +101,38 @@ void isomorph::RsemEstimator::preprocess_data(const SamData& alignments,
                          num_transcripts+1,
                          reads_info);
     
+    cerr << "Generating read ids." << endl;
     for (int i = 0; i < num_reads; ++i) {
-        params.qNameToID[toCString(reads.ids[i])] = i;
+        string qName = toCString(reads.ids[i]);
+        int pos = qName.find(' ', 0);
+        if (pos != string::npos) {
+            qName = qName.substr(0, pos);
+        }
+
+        params.qNameToID[qName] = i;
     }
 
+    cerr << "###############" << endl;
+    
     // arange the alignments in the "neighboring matrix"
+    int ID = 0;
+    int count = 0;
     for (auto record : alignments.records) {
         string qName = toCString(record.qName);
         int read_id = params.qNameToID[qName];
 
-        if (record.rID != record.INVALID_REFID) {
+        if (!reads_info[read_id] && 
+                record.rID != record.INVALID_REFID) {
+            
+            count++;
             reads_info[read_id] = true;
             params.pi_x_n[record.rID][read_id] = 1;
         } 
     }
     
+    cerr << "Number of reads: " << num_reads << endl;
+    cerr << "Number of reads with alignment: " << count << endl;
+
     // all the reads that have no good alignment are assigned to dummy isoform
     for (int i = 0; i < num_reads; ++i) {
         if (!reads_info[i]) {
@@ -119,6 +140,8 @@ void isomorph::RsemEstimator::preprocess_data(const SamData& alignments,
         }
     }
 
+    params.reads = reads;
+    params.transcripts = transcripts;
     return;
 }
 

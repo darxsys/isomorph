@@ -8,12 +8,15 @@
 #include "estimator.h"
 
 namespace isomorph {
-    
     struct EMParams {
         std::unordered_map<std::string, int> qNameToID;
         std::vector<std::vector<short> > pi_x_n;
-        FastAData reads;
+        FastQData reads;
         FastAData transcripts;
+    };
+
+    struct EMResult {
+        std::vector<double> relative_expression;
     };
 
     class RsemEstimator : public Estimator {
