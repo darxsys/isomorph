@@ -37,6 +37,8 @@ namespace isomorph {
         void preprocess_data(const SamData& alignments,
                              const FastAData& transcripts, const FastQData& reads, 
                              const FastQData& pairs, EMParams& params);
+        
+        void EMAlgorithm(EMParams& params, EMResult& result);
     };
 }
 
