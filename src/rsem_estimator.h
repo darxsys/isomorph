@@ -21,7 +21,8 @@ namespace isomorph {
 
     class RsemEstimator : public Estimator {
     public:
-       virtual void estimate_abundances(seqan::CharString left_pairs, seqan::CharString right_pairs,
+       virtual void estimate_abundances(seqan::CharString left_pairs, 
+                                        seqan::CharString right_pairs,
                                         seqan::CharString transcripts);
     private:
         /*
@@ -39,6 +40,8 @@ namespace isomorph {
                              const FastQData& pairs, EMParams& params);
         
         void EMAlgorithm(EMParams& params, EMResult& result);
+        void precalc_posteriors(const EMParams& params, 
+                                std::vector<std::vector<double> >& posteriors);
         void output_result(EMResult& result, std::string filename);
     };
 }
