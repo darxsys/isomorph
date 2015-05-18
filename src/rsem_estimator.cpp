@@ -123,8 +123,7 @@ void isomorph::RsemEstimator::preprocess_data(const SamData& alignments,
         string qName = toCString(record.qName);
         int read_id = params.qNameToID[qName];
 
-        if (!reads_info[read_id] && 
-                record.rID != record.INVALID_REFID) {
+        if (record.rID != record.INVALID_REFID) {
             
             count++;
             reads_info[read_id] = true;
@@ -169,17 +168,21 @@ void isomorph::RsemEstimator::EMAlgorithm(EMParams& params, EMResult& result) {
     
     vector<double> expressions(num_transcripts+1, 1./(num_transcripts+1));
     int iter = 0;
+    cerr << "Entering the EM iterations." << endl;
     do {
         // E-step
         vector<double> pre_m_expressions(num_transcripts+1, 0.);
         double expression_sum = 0;
+        vector<double> tmp_expressions(num_transcripts+1, 0.);
         
         for (int n = 0; n < num_reads; ++n) {
             double read_expect_sum = 0;
-            vector<double> tmp_expressions(num_transcripts+1, 0.);
+            tmp_expressions.assign(num_transcripts+1, 0.);
             
             for (int i = 0; i < num_transcripts; ++i) {
-                if (pi_x_n[i][n] == 0) continue;
+                if (pi_x_n[i][n] == 0) {
+                    continue;
+                }
                 
                 int transcript_len = length(transcripts.seqs[i]);
                 double coeff = expressions[i] / transcript_len;
@@ -214,11 +217,14 @@ void isomorph::RsemEstimator::EMAlgorithm(EMParams& params, EMResult& result) {
             }
         }
         
+        cerr << "setting old expression values" << endl;
         expression_sum += expressions[num_transcripts];
         // M-Step
         for (int i = 0; i < num_transcripts; ++i) {
             expressions[i] = pre_m_expressions[i] / expression_sum;   
         }
+        
+        cerr << "Current iteration: " << iter << endl;
     } while (++iter < 1000);
     
     for (int i = 0; i < num_transcripts; ++i) {
