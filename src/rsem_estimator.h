@@ -16,7 +16,7 @@ namespace isomorph {
     };
 
     struct EMResult {
-        std::vector<double> relative_expression;
+        std::vector<double> relative_expressions;
     };
 
     class RsemEstimator : public Estimator {
@@ -39,6 +39,7 @@ namespace isomorph {
                              const FastQData& pairs, EMParams& params);
         
         void EMAlgorithm(EMParams& params, EMResult& result);
+        void output_result(EMResult& result, std::string filename);
     };
 }
 

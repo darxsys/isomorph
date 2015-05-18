@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <unordered_set>
+#include <fstream>
 
 #include <seqan/stream.h>
 #include <seqan/basic.h>
@@ -76,7 +77,8 @@ void isomorph::RsemEstimator::estimate_abundances(CharString reads, CharString t
     
     EMResult result;
     EMAlgorithm(params, result);
-
+    output_result(result, "isomorph.abundances.fasta");
+    
     // cleaning up
     string rm = "rm -rf " + dir;
     execute_command(rm.c_str());
@@ -164,50 +166,74 @@ void isomorph::RsemEstimator::EMAlgorithm(EMParams& params, EMResult& result) {
     int read_len = length(reads.seqs[0]);
 
     bool strand_specific = false;
-
-    // E-step
-    vector<double> expressions(num_transcripts + 1, 1./num_transcripts);
-    double e_step_sum = 0;
-
-    for (int i = 0; i < num_transcripts; ++i) {
-        int transcript_len = length(transcripts.seqs[i]);
-        double coeff = expressions[i] / transcript_len;
-        double transcript_sum = 0;
-
+    
+    vector<double> expressions(num_transcripts+1, 1./(num_transcripts+1));
+    int iter = 0;
+    do {
+        // E-step
+        vector<double> pre_m_expressions(num_transcripts+1, 0.);
+        double expression_sum = 0;
+        
         for (int n = 0; n < num_reads; ++n) {
-            double read_transcript_sum = 0;
-            for (int j = 0; j < transcript_len - read_len; ++j) {
-                if (strand_specific) {
-
-                } else {
-                    for (int k = 0; k < 2; ++k) {
-                        // do calculations
-                        double prob = 1;
-                        for (int r = 0; r < read_len; ++r) {
-                            if (reads.seqs[n][r] == transcripts.seqs[i][j+r]) {
-                                prob *= 1;
-                            } else {
-                                prob *= 0.5;
-                            }
+            double read_expect_sum = 0;
+            vector<double> tmp_expressions(num_transcripts+1, 0.);
+            
+            for (int i = 0; i < num_transcripts; ++i) {
+                if (pi_x_n[i][n] == 0) continue;
+                
+                int transcript_len = length(transcripts.seqs[i]);
+                double coeff = expressions[i] / transcript_len;
+                
+                // P(rn|znijk=1)
+                double P_sum = 0.;
+                for (int j = 0; j < transcript_len - read_len; ++j) {
+                    double Prn = 1.;
+                    // forward direction
+                    for (int l = 0; l < read_len; ++l) {
+                        if (reads.seqs[l] != transcripts.seqs[l]) {
+                            Prn *= 0.5;
                         }
-
-                        read_transcript_sum += prob;
+                    }
+                    
+                    P_sum += Prn;
+                    // reverse direction
+                }
+                
+                P_sum *= coeff;
+                tmp_expressions[i] += P_sum;
+                read_expect_sum += P_sum;
+            }
+            
+            if (read_expect_sum > 0) {
+                for (int i = 0; i < num_transcripts; ++i) {
+                    if (pi_x_n[i][n]) {
+                        pre_m_expressions[i] += tmp_expressions[i] / read_expect_sum;
+                        expression_sum += pre_m_expressions[i];
                     }
                 }
             }
-
-            transcript_sum += coeff * read_transcript_sum;
         }
-
-        e_step_sum += transcript_sum;
-        expressions[i] = e_step_sum;
+        
+        expression_sum += expressions[num_transcripts];
+        // M-Step
+        for (int i = 0; i < num_transcripts; ++i) {
+            expressions[i] = pre_m_expressions[i] / expression_sum;   
+        }
+    } while (++iter < 1000);
+    
+    for (int i = 0; i < num_transcripts; ++i) {
+        result.relative_expressions.emplace_back(expressions[i]);
     }
+}
 
-    // dummy isoform has to be handled
-    e_step_sum += expressions[num_transcripts];
-    for (int i = 0; i <= num_transcripts; ++i) {
-        expressions[i] /= e_step_sum;
+void isomorph::RsemEstimator::output_result(EMResult& result, string filename) {
+    ofstream output;
+    output.open(filename.c_str(), ofstream::out | ofstream::trunc);
+    
+    for (int i = 0; i < result.relative_expressions.size(); ++i) {
+        output << result.relative_expressions[i];
     }
-
-    // M-Step
+    
+    output.close();
+    return;
 }
