@@ -227,7 +227,7 @@ void isomorph::RsemEstimator::output_result(EMResult& result, string filename) {
     output.open(filename.c_str(), ofstream::out | ofstream::trunc);
     
     for (int i = 0; i < result.relative_expressions.size(); ++i) {
-        output << result.relative_expressions[i];
+        output << result.relative_expressions[i] << endl;
     }
     
     output.close();
