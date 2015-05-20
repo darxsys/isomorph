@@ -172,43 +172,49 @@ void isomorph::RsemEstimator::EMAlgorithm(EMParams& params, EMResult& result) {
     vector<vector<double> > read_posteriors;
     precalc_posteriors(params, read_posteriors);
         
-    vector<double> expressions(num_transcripts, 1./(num_transcripts));
-    vector<double> pre_m_expressions(num_transcripts, 0);
+    vector<double> expressions(num_transcripts+1, 1./(num_transcripts+1));
+    vector<double> tmp_expressions(num_transcripts, 1./(num_transcripts));
+    vector<double> pre_m_expressions(num_transcripts, 1./(num_transcripts));
     int iter = 0;
     cerr << "Entering the EM iterations." << endl;
     do {
         // E-step
+        double expression_sum = 0;
         pre_m_expressions.assign(num_transcripts, 0);
+                      
         for (int n = 0; n < num_reads; ++n) {
+            tmp_expressions.assign(num_transcripts, 0);
             double read_expect_sum = 0;
             
             // isoforms joined to this read
             for (int t = 0; t < pi_x_n[n].size(); ++t) {
                 int i = pi_x_n[n][t];
+//                cerr << ">>Isoform ID: " << i << endl;
                 int transcript_len = length(transcripts.seqs[i]);
                 double coeff = expressions[i] / transcript_len;
+                
                 // P(rn|znijk=1)
                 double P_sum = read_posteriors[n][t];
                 
                 P_sum *= coeff;
-//                tmp_expressions[i] += P_sum;
+                tmp_expressions[i] += P_sum;
                 read_expect_sum += P_sum;
             }
             
-            for (int t = 0; t < pi_x_n[n].size(); ++t) {
-                int i = pi_x_n[n][t];
-                int transcript_len = length(transcripts.seqs[i]);
-                pre_m_expressions[i] += read_posteriors[n][t] * expressions[i] / transcript_len / read_expect_sum;
+            for (int i : pi_x_n[n]) {
+                pre_m_expressions[i] += tmp_expressions[i] / read_expect_sum;
+                expression_sum += pre_m_expressions[i];
             }
         }
         
-//        cerr << "setting old expression values" << endl;
+        cerr << "setting old expression values" << endl;
+        expression_sum += expressions[num_transcripts];
         // M-Step
         for (int i = 0; i < num_transcripts; ++i) {
-            expressions[i] = pre_m_expressions[i] / num_reads;   
+            expressions[i] = pre_m_expressions[i] / expression_sum;   
         }
         
-//        cerr << "Current iteration: " << iter << endl;
+        cerr << "Current iteration: " << iter << endl;
     } while (++iter < 1000);
     
     for (int i = 0; i < num_transcripts; ++i) {
@@ -242,9 +248,12 @@ void isomorph::RsemEstimator::precalc_posteriors(const EMParams& params,
     
     for (int n = 0; n < num_reads; ++n) {
         vector<double> v;
+        
         // isoforms joined to this read
         for (int i : pi_x_n[n]) {
+//                cerr << ">>Isoform ID: " << i << endl;
             int transcript_len = length(transcripts.seqs[i]);
+            
             // P(rn|znijk=1)
             double P_sum = 0.;
             for (int j = 0; j < transcript_len - read_len; ++j) {
@@ -255,13 +264,16 @@ void isomorph::RsemEstimator::precalc_posteriors(const EMParams& params,
                         Prn *= 0.5;
                     }
                 }
+                
                 P_sum += Prn;
                 // reverse direction
             }
+            
             v.emplace_back(P_sum);            
         }
+        
         posteriors.emplace_back(v);
     }
     
     cout << "Done precalculating posteriors." << endl;                                                    
-}                   
+}
