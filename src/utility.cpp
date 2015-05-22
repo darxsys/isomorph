@@ -1,3 +1,5 @@
+#include <ctype.h>
+#include <cstdio>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -91,6 +93,22 @@ int isomorph::Reader::read_fasta(CharString filename,
 
 }
 
+inline char reverse_complement(const char& c) {
+    switch(toupper(c)) {
+    case 'A':
+        return 'T';
+    case 'T':
+        return 'A';
+    case 'G':
+        return 'C';
+    case 'C':
+        return 'G';
+    }
+    
+    return '\0';
+}
+
+
 /*
     Reads and returns fastq file sequences.
 */
@@ -111,3 +129,5 @@ int isomorph::Reader::read_fastq(CharString filename,
 
     return 0;
 }
+
+

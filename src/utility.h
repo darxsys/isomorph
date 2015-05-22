@@ -32,9 +32,9 @@ namespace isomorph {
     */
     void print_sam_alignment_records(
             const std::vector<seqan::BamAlignmentRecord>& records);
+
+    inline char reverse_complement(const char& c);
     
-
-
     class Reader {
     public:
         int read_sam(seqan::CharString filename,

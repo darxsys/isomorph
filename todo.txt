@@ -1,2 +1,4 @@
-1) doraditi for loop u countu, moze brze sigurno
-2) pogledat ostale stvari kod iteracije
+1) matrica za racunanje vjerojatnosti pozicije ce kod mene biti drukcija
+2) u principu oni alignmente gledaju samo od pozicija koje im je bowtie dao, a ja cijeli transkript
+3) position-independent background distribution za noise izoformu mi je sad malo problem jer ne znam to naci
+4) count estimator trebam prilagoditi za single i poboljsati za paired end readove
