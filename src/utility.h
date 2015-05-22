@@ -33,8 +33,6 @@ namespace isomorph {
     void print_sam_alignment_records(
             const std::vector<seqan::BamAlignmentRecord>& records);
 
-    inline char reverse_complement(const char& c);
-    
     class Reader {
     public:
         int read_sam(seqan::CharString filename,
@@ -44,6 +42,21 @@ namespace isomorph {
         int read_fastq(seqan::CharString filename,
                        FastQData* data);
     };
+    
+    inline char reverse_complement(const char& c) {
+        switch(toupper(c)) {
+        case 'A':
+            return 'T';
+        case 'T':
+            return 'A';
+        case 'G':
+            return 'C';
+        case 'C':
+            return 'G';
+        }
+        
+        return '\0';
+    }
 }
 
 #endif // UTILITY_H

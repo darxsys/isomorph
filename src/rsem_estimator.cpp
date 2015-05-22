@@ -1,3 +1,5 @@
+#include <ctype.h>
+#include <cstdio>
 #include <iostream>
 #include <vector>
 #include <unordered_set>
@@ -37,8 +39,9 @@ void isomorph::RsemEstimator::estimate_abundances(CharString reads,
         command = "bowtie2 -x " + dir + "/isomorph-index -1 " + reads_str + " -2 " +
                 toCString(pairs_str) + " -S " + dir + "/isomorph.sam";
     } else {
-        command = "bowtie2 --all -N 1 -L 25 -q -x " + dir + "/isomorph-index -U " + reads_str +
-                " -S " + dir + "/isomorph.sam";
+        command = "bowtie2 -q --phred33 --sensitive --dpad 0 --gbar 99999999 --mp 1,1 --np 1 \
+                   --score-min L,0,-0.1 -p 1 -k 200 -x " + dir + "/isomorph-index -U " + reads_str +
+                   " -S " + dir + "/isomorph.sam";
     }
     execute_command(command.c_str());
 
@@ -225,6 +228,14 @@ void isomorph::RsemEstimator::precalc_posteriors(const EMParams& params,
                 }
                 P_sum += Prn * 0.5; // orientation probability
                 // reverse direction
+                Prn = 1;
+                for (int l = 0; l < read_len; ++l) {
+                    if (reverse_complement(reads.seqs[n][l]) != toupper(transcripts.seqs[i][l+j])) {
+                        Prn *= 0.5;
+                    }
+                }
+                P_sum += Prn * 0.5;
+                
             }
             v.emplace_back(P_sum);            
         }
@@ -232,6 +243,7 @@ void isomorph::RsemEstimator::precalc_posteriors(const EMParams& params,
         if (pi_x_n[n].size() == 0) {
             
         }
+        
         posteriors.emplace_back(v);
     }
     
