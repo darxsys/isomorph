@@ -37,16 +37,17 @@ namespace isomorph {
             of the ideas are described in the original RSEM paper as
             well as in the follow-up.
         */
-        void preprocess_data(const SamData& alignments,
-                             const seqan::CharString& transcripts, 
-                             const seqan::CharString& reads, 
+        void preprocess_data(const seqan::CharString& transcripts, 
+                             const seqan::CharString& reads,
+                             const seqan::CharString& pairs,
+                             const std::string& output_dir, 
                              EMParams& params);
 
-        void preprocess_data(const SamData& alignments,
-                             const seqan::CharString& transcripts, 
-                             const seqan::CharString& reads, 
-                             const seqan::CharString& pairs, 
-                             EMParams& params);
+//        void preprocess_data(const SamData& alignments,
+//                             const seqan::CharString& transcripts, 
+//                             const seqan::CharString& reads, 
+//                             const seqan::CharString& pairs, 
+//                             EMParams& params);
         
         void EMAlgorithm(EMParams& params, EMResult& result);
         void precalc_posteriors(const EMParams& params, 
