@@ -83,10 +83,10 @@ void isomorph::RsemEstimator::preprocess_data(const CharString& transcripts,
     int num_reads = length(params.reads.ids);
     int num_transcripts = length(params.transcripts.ids);
 
-    vector<int> reads_info;
+    vector<pair<int, int> > v;
     params.pi_x_n.insert(params.pi_x_n.begin(), 
                          num_reads,
-                         reads_info);
+                         v);
     
     vector<bool> read_processed(num_reads, false);
         
@@ -126,7 +126,7 @@ void isomorph::RsemEstimator::preprocess_data(const CharString& transcripts,
             }
             
             read_processed[read_id] = true;
-            params.pi_x_n[read_id].emplace_back(record.rID);
+            params.pi_x_n[read_id].emplace_back(record.rID, record.beginPos);
         } 
     }
     
@@ -174,40 +174,36 @@ void isomorph::RsemEstimator::precalc_posteriors(const EMParams& params,
     
     for (int n = 0; n < num_reads; ++n) {
         vector<double> v;
-        // isoforms joined to this read
-        for (int i : pi_x_n[n]) {
+        // isoforms assigned to this read
+        for (auto record : pi_x_n[n]) {
+            int i = record.first;
             int transcript_len = length(transcripts.seqs[i]);
             
             // P(rn|znijk=1)
             double P_sum = 0.;
-            for (int j = 0; j < transcript_len - read_len; ++j) {
+            for (int j = 0; j < read_len && j + record.second < transcript_len; ++j) {
                 double Prn = 1.;
                 
                 // forward direction
-                for (int l = 0; l < read_len; ++l) {
-                    if (reads.seqs[n][l] != transcripts.seqs[i][l+j]) {
-                        Prn *= 0.5;
-                    }
+                if (reads.seqs[n][j] != transcripts.seqs[i][record.second + j]) {
+                    Prn *= 0.5;
                 }
                 P_sum += Prn * 0.5; // orientation probability
                 
                 // reverse direction
                 Prn = 1;
-                for (int l = 0; l < read_len; ++l) {
-                    if (reverse_complement(reads.seqs[n][l]) != toupper(transcripts.seqs[i][l+j])) {
-                        Prn *= 0.5;
-                    }
+                if (reverse_complement(reads.seqs[n][j]) != toupper(transcripts.seqs[i][record.second+j])) {
+                    Prn *= 0.5;
                 }
                 P_sum += Prn * 0.5;
             }
             
             v.emplace_back(P_sum);            
         }
-        
-        if (pi_x_n[n].size() == 0) {
-            
-        }
-        
+//        // reads with no transcripts assigned
+//        if (pi_x_n[n].size() == 0) {
+//            
+//        }
         posteriors.emplace_back(v);
     }
     
@@ -242,7 +238,7 @@ void isomorph::RsemEstimator::EMAlgorithm(EMParams& params, EMResult& result) {
             
             // isoforms joined to this read
             for (int t = 0; t < pi_x_n[n].size(); ++t) {
-                int i = pi_x_n[n][t];
+                int i = pi_x_n[n][t].first;
                 int transcript_len = length(transcripts.seqs[i]);
                 double coeff = expressions[i] / transcript_len;
                 // P(rn|znijk=1)
@@ -251,7 +247,7 @@ void isomorph::RsemEstimator::EMAlgorithm(EMParams& params, EMResult& result) {
             }
             
             for (int t = 0; t < pi_x_n[n].size(); ++t) {
-                int i = pi_x_n[n][t];
+                int i = pi_x_n[n][t].first;
                 int transcript_len = length(transcripts.seqs[i]);
                 pre_m_expressions[i] += read_posteriors[n][t] * expressions[i] / transcript_len / read_expect_sum;
             }

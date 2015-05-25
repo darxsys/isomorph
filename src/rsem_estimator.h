@@ -17,7 +17,7 @@ namespace isomorph {
     private:
         struct EMParams {
             std::unordered_map<std::string, int> qNameToID;
-            std::vector<std::vector<int> > pi_x_n;
+            std::vector<std::vector<std::pair<int, int> > > pi_x_n;
             FastQData reads;
             FastAData transcripts;
             int eff_num_reads;
