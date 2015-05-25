@@ -93,8 +93,15 @@ void isomorph::RsemEstimator::preprocess_data(const CharString& transcripts,
     for (int i = 0; i < num_reads; ++i) {
         string qName = toCString(params.reads.ids[i]);
         int pos = qName.find(' ', 0);
+        
         if (pos != string::npos) {
             qName = qName.substr(0, pos);
+            if (paired_end) {
+                pos = qName.find('/', 0);
+                if (pos != string::npos) {
+                    qName = qName.substr(0, pos);
+                }
+            }
         }
 
         params.qNameToID[qName] = i;
@@ -105,6 +112,11 @@ void isomorph::RsemEstimator::preprocess_data(const CharString& transcripts,
     int count = 0;
     for (auto record : alignments.records) {
         string qName = toCString(record.qName);
+        
+        if (paired_end) {
+            qName = qName.substr(0, qName.find('/', 0));    
+        }
+        
         int read_id = params.qNameToID[qName];
 
         if (record.rID != record.INVALID_REFID) {
