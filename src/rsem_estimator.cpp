@@ -61,8 +61,8 @@ void isomorph::RsemEstimator::preprocess_data(const CharString& transcripts,
     // runs the alignment
     // parameters are set to be the same as in RSEM with bowtie2
     if (paired_end) {
-        command = "bowtie2 -q --phred33 --sensitive --dpad 0 --gbar 99999999 --mp 1,1 --np 1\
-                  --score-min L,0,-0.1 -I 1 -X 1000 --no-mixed --no-discordant\
+        command = "bowtie2 -q --phred33 --sensitive --dpad 0 --gbar 99999999 --mp 1,1 --np 1 \
+                  --score-min L,0,-0.1 -I 1 -X 1000 --no-mixed --no-discordant \
                   -p 1 -k 200 -x " + output_dir + "/isomorph-bowtie-index -1 " + reads_str + " -2 " +
                   toCString(pairs_str) + " -S " + output_dir + "/isomorph.sam";
     } else {
@@ -97,7 +97,7 @@ void isomorph::RsemEstimator::preprocess_data(const CharString& transcripts,
         if (pos != string::npos) {
             qName = qName.substr(0, pos);
             if (paired_end) {
-                pos = qName.find('/', 0);
+                pos = qName.find('.', 0);
                 if (pos != string::npos) {
                     qName = qName.substr(0, pos);
                 }
@@ -114,7 +114,7 @@ void isomorph::RsemEstimator::preprocess_data(const CharString& transcripts,
         string qName = toCString(record.qName);
         
         if (paired_end) {
-            qName = qName.substr(0, qName.find('/', 0));    
+            qName = qName.substr(0, qName.find('.', 0));    
         }
         
         int read_id = params.qNameToID[qName];
@@ -136,29 +136,6 @@ void isomorph::RsemEstimator::preprocess_data(const CharString& transcripts,
     cerr << "Done preprocessing data." << endl;
     return;
 }
-
-///*
-//    Paired-end version of data preprocessing.
-//*/
-//void isomorph::RsemEstimator::preprocess_data(const SamData& alignments,
-//                                              const CharString& transcripts, 
-//                                              const CharString& reads, 
-//                                              const CharString& pairs, 
-//                                              EMParams& params) {
-//
-//    cerr << "Preprocessing paired-end data" << endl;
-//    Reader reader;
-//    reader.read_fastq(reads, &params.reads);
-//    reader.read_fastq(reads, &params.pairs);
-//    reader.read_fasta(transcripts, &params.transcripts);
-//    
-//    int num_reads = length(params.reads.ids);
-//    int num_transcripts = length(params.transcripts.ids);
-//    
-//    // estimating insert size, assuming normal distribution
-//    
-//    cerr << "Done preprocessing paired-end data" << endl;
-//}
 
 void isomorph::RsemEstimator::precalc_posteriors(const EMParams& params,
                                                 vector<vector<double> >& posteriors) {

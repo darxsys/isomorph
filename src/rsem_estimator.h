@@ -32,7 +32,7 @@ namespace isomorph {
         };
         
         /*
-            Methods preprocess data, eliminate extra stuff and create
+            Method does preprocesing of data, elimination of extra stuff and creates
             necessary data structures for the EM to operate on. Most
             of the ideas are described in the original RSEM paper as
             well as in the follow-up.
@@ -42,12 +42,6 @@ namespace isomorph {
                              const seqan::CharString& pairs,
                              const std::string& output_dir, 
                              EMParams& params);
-
-//        void preprocess_data(const SamData& alignments,
-//                             const seqan::CharString& transcripts, 
-//                             const seqan::CharString& reads, 
-//                             const seqan::CharString& pairs, 
-//                             EMParams& params);
         
         void EMAlgorithm(EMParams& params, EMResult& result);
         void precalc_posteriors(const EMParams& params, 
