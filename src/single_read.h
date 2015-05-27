@@ -13,7 +13,7 @@ namespace isomorph {
 		// all the transcript alignments that are good
 		// transcript id, alignment position
 		std::vector<std::tuple<int, int> > pi_x_n;				
-	}
+	};
 }
 
 #endif // SINGLE_READ_H

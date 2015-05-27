@@ -6,6 +6,9 @@
 
 #include "utility.h"
 #include "estimator.h"
+#include "read.h"
+#include "single_read.h"
+#include "paired_read.h"
 
 namespace isomorph {
 
@@ -19,11 +22,16 @@ namespace isomorph {
             std::unordered_map<std::string, int> qNameToID;
             std::vector<std::vector<std::pair<int, int> > > pi_x_n;
             FastQData reads;
+            FastQData pairs;
             FastAData transcripts;
+            std::vector<std::unique_ptr<SingleRead> > single_reads;
+            std::vector<std::unique_ptr<PairedRead> > paired_reads;
             int eff_num_reads;
+            bool paired_end;
             
             EMParams() {
                 eff_num_reads = 0;
+                paired_end = false;
             }
         };
     
@@ -46,6 +54,12 @@ namespace isomorph {
         void EMAlgorithm(EMParams& params, EMResult& result);
         void precalc_posteriors(const EMParams& params, 
                                 std::vector<std::vector<double> >& posteriors);
+                                
+        void create_paired_end(const SamData& alignments,
+                               EMParams& params);
+                               
+        void create_single_end(const SamData& alignments,
+                               EMParams& params);                               
                                 
         void output_result(const FastAData& transcripts, 
                            const EMResult& result, 

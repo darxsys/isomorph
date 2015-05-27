@@ -19,7 +19,7 @@ namespace isomorph {
 		// all the transcript alignments that are good
 		// transcript id, left_position, right_position
 		std::vector<std::tuple<int, int, int> > pi_x_n;				
-	}
+	};
 }
 
 #endif // PAIRED_READ_H

@@ -4,8 +4,7 @@
 namespace isomorph {
 	struct Read {
 		
-	}
-
+	};
 }
 
 #endif // READ_H
