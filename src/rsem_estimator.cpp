@@ -342,7 +342,6 @@ void isomorph::RsemEstimator::precalc_posteriors(const EMParams& params,
                     if (reads.seqs[n][j] != transcripts.seqs[i][position + j]) {
                         Prf *= 0.5;
                     }
-                    
                     // reverse direction
                     if (reverse_complement(reads.seqs[n][j]) != toupper(transcripts.seqs[i][position + j])) {
                         Prr *= 0.5;
@@ -353,21 +352,17 @@ void isomorph::RsemEstimator::precalc_posteriors(const EMParams& params,
                 position = get<2>(record);
                 for (int j = 0; j < read_len && j + position < transcript_len; ++j) {
                     // forward direction
-                    if (reads.seqs[n][j] != transcripts.seqs[i][position + j]) {
+                    if (pairs.seqs[n][j] != transcripts.seqs[i][position + j]) {
                         Prf *= 0.5;
                     }
-                    
                     // reverse direction
-                    if (reverse_complement(reads.seqs[n][j]) != toupper(transcripts.seqs[i][position + j])) {
+                    if (reverse_complement(pairs.seqs[n][j]) != toupper(transcripts.seqs[i][position + j])) {
                         Prr *= 0.5;
                     }
                 }                
                 
                 P_sum += Prf * 0.5; // orientation probability
                 P_sum += Prr * 0.5;
-                
-                // reverse direction
-                
                 v.emplace_back(P_sum);            
             }
             posteriors.emplace_back(v);
@@ -381,7 +376,6 @@ void isomorph::RsemEstimator::precalc_posteriors(const EMParams& params,
 void isomorph::RsemEstimator::EMAlgorithm(EMParams& params, EMResult& result) {
     auto& transcripts = params.transcripts;
     auto& reads = params.reads;
-    auto& pi_x_n = params.pi_x_n;
     auto& qNameToID = params.qNameToID;
     int num_reads = length(reads.ids);
     int num_transcripts = length(transcripts.ids);
@@ -392,41 +386,79 @@ void isomorph::RsemEstimator::EMAlgorithm(EMParams& params, EMResult& result) {
     // precalculate posterior sums
     vector<vector<double> > read_posteriors;
     precalc_posteriors(params, read_posteriors);
-        
+
     vector<double> expressions(num_transcripts, 1./(num_transcripts));
     vector<double> pre_m_expressions(num_transcripts, 0);
     int iter = 0;
     
     cerr << "Entering the EM iterations." << endl;
-    do {
-        // E-step
-        pre_m_expressions.assign(num_transcripts, 0);
-        for (int n = 0; n < num_reads; ++n) {
-            double read_expect_sum = 0;
-            
-            // isoforms joined to this read
-            for (int t = 0; t < pi_x_n[n].size(); ++t) {
-                int i = pi_x_n[n][t].first;
-                int transcript_len = seqan::length(transcripts.seqs[i]);
-                double coeff = expressions[i] / transcript_len;
-                // P(rn|znijk=1)
-                double P_sum = read_posteriors[n][t];
-                read_expect_sum += P_sum * coeff;
+    if (!params.paired_end) {
+        auto& single_reads = params.single_reads;
+        do {
+            // E-step
+            pre_m_expressions.assign(num_transcripts, 0);
+            for (int n = 0; n < num_reads; ++n) {
+                double read_expect_sum = 0;
+                const unique_ptr<SingleRead>& read = single_reads[n];
+                
+                // isoforms joined to this read
+                for (int t = 0; t < read->pi_x_n.size(); ++t) {
+                    auto record = read->pi_x_n[t];
+                    int i = get<0>(record);
+                    int transcript_len = seqan::length(transcripts.seqs[i]);
+                    double coeff = expressions[i] / transcript_len;
+                    // P(rn|znijk=1)
+                    double P_sum = read_posteriors[n][t];
+                    read_expect_sum += P_sum * coeff;
+                }
+                
+                for (int t = 0; t < read->pi_x_n.size(); ++t) {
+                    auto record = read->pi_x_n[t];
+                    int i = get<0>(record);
+                    int transcript_len = length(transcripts.seqs[i]);
+                    pre_m_expressions[i] += read_posteriors[n][t] * expressions[i] / transcript_len / read_expect_sum;
+                }
             }
             
-            for (int t = 0; t < pi_x_n[n].size(); ++t) {
-                int i = pi_x_n[n][t].first;
-                int transcript_len = length(transcripts.seqs[i]);
-                pre_m_expressions[i] += read_posteriors[n][t] * expressions[i] / transcript_len / read_expect_sum;
+            // M-Step
+            for (int i = 0; i < num_transcripts; ++i) {
+                expressions[i] = pre_m_expressions[i] / params.eff_num_reads;   
             }
-        }
-        
-        // M-Step
-        for (int i = 0; i < num_transcripts; ++i) {
-            expressions[i] = pre_m_expressions[i] / params.eff_num_reads;   
-        }
-        
-    } while (++iter < 1000);
+        } while (++iter < 1000);
+    } else {
+        auto& paired_reads = params.paired_reads;
+        do {
+            // E-step
+            pre_m_expressions.assign(num_transcripts, 0);
+            for (int n = 0; n < num_reads; ++n) {
+                double read_expect_sum = 0;
+                const unique_ptr<PairedRead>& read = paired_reads[n];
+                
+                // isoforms joined to this read
+                for (int t = 0; t < read->pi_x_n.size(); ++t) {
+                    auto record = read->pi_x_n[t];
+                    int i = get<0>(record);
+                    int transcript_len = seqan::length(transcripts.seqs[i]);
+                    double coeff = expressions[i] / transcript_len;
+                    // P(rn|znijk=1)
+                    double P_sum = read_posteriors[n][t];
+                    read_expect_sum += P_sum * coeff;
+                }
+                
+                for (int t = 0; t < read->pi_x_n.size(); ++t) {
+                    auto record = read->pi_x_n[t];
+                    int i = get<0>(record);
+                    int transcript_len = length(transcripts.seqs[i]);
+                    pre_m_expressions[i] += read_posteriors[n][t] * expressions[i] / transcript_len / read_expect_sum;
+                }
+            }
+            
+            // M-Step
+            for (int i = 0; i < num_transcripts; ++i) {
+                expressions[i] = pre_m_expressions[i] / params.eff_num_reads;   
+            }
+        } while (++iter < 1000);        
+    }
     
     for (int i = 0; i < num_transcripts; ++i) {
         result.relative_expressions.emplace_back(expressions[i]);
