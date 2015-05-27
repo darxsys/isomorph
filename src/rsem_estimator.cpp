@@ -237,7 +237,7 @@ void isomorph::RsemEstimator::output_result(const FastAData& transcripts,
                                             const EMResult& result, 
                                             const string filename) {
     
-    cerr << "Outputing the results." << endl;                                                
+    cerr << "Outputing results." << endl;                                                
     ofstream output;
     output.open(filename.c_str(), ofstream::out | ofstream::trunc);
     
