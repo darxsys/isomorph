@@ -134,14 +134,15 @@ void isomorph::RsemEstimator::preprocess_data(const CharString& transcripts,
 //    }
     
 //    cerr << "Number of reads: " << num_reads << endl;
-//    cerr << "Effective number of reads: " << params.eff_num_reads << endl;
-//    cerr << "Done preprocessing data." << endl;
+    cerr << "Effective number of reads: " << params.eff_num_reads << endl;
+    cerr << "Done preprocessing data." << endl;
     return;
 }                   
 
 void isomorph::RsemEstimator::create_single_end(const SamData& alignments,
                                                 EMParams& params) {
-    
+  
+    cerr << "Creating the reads." << endl;    
     auto& reads = params.reads;
     auto& transcripts = params.transcripts;
     auto& processed_reads = params.single_reads;
@@ -188,12 +189,14 @@ void isomorph::RsemEstimator::create_single_end(const SamData& alignments,
         } 
     }
     
+    cerr << "Done creating the reads." << endl;
     return;  
 }
 
 void isomorph::RsemEstimator::create_paired_end(const SamData& alignments,
                                                 EMParams& params) {
 
+    cerr << "Creating the reads." << endl;
     auto& reads = params.reads;
     auto& pairs = params.pairs;
     auto& transcripts = params.transcripts;
@@ -237,7 +240,7 @@ void isomorph::RsemEstimator::create_paired_end(const SamData& alignments,
         // only records that are completely mapped
         if (record.rID != record.INVALID_REFID && 
             record.rNextId != record.INVALID_REFID) {
-            
+                
             if (!has_alignment[read_id]) {
                 params.eff_num_reads++;
                 has_alignment[read_id] = true;
@@ -270,6 +273,7 @@ void isomorph::RsemEstimator::create_paired_end(const SamData& alignments,
         } 
     }
     
+    cerr << "Done creating the reads." << endl;
     return;    
 }
 
@@ -334,9 +338,9 @@ void isomorph::RsemEstimator::precalc_posteriors(const EMParams& params,
                 double P_sum = 0.;
                 double Prf = 1;
                 double Prr = 1;
-                int position = get<1>(record);
                 
                 // first mate
+                int position = get<1>(record);
                 for (int j = 0; j < read_len && j + position < transcript_len; ++j) {
                     // forward direction
                     if (reads.seqs[n][j] != transcripts.seqs[i][position + j]) {
