@@ -13,6 +13,7 @@
 #include "rsem_estimator.h"
 #include "utility.h"
 #include "count_estimator.h"
+#include "paired_read.h"
 
 using namespace seqan;
 using namespace std;
@@ -47,7 +48,7 @@ void isomorph::RsemEstimator::preprocess_data(const CharString& transcripts,
                                               const string& output_dir, 
                                               EMParams& params) {
     
-    cerr << "Preprocessing data" << endl;
+    cerr << "Preprocessing data." << endl;
     bool paired_end = pairs == CharString("") ? false : true;
     Reader reader;
     string transcripts_str(toCString(transcripts)); 
@@ -96,32 +97,23 @@ void isomorph::RsemEstimator::preprocess_data(const CharString& transcripts,
         
         if (pos != string::npos) {
             qName = qName.substr(0, pos);
-            if (paired_end) {
-                pos = qName.find('.', 0);
-                if (pos != string::npos) {
-                    qName = qName.substr(0, pos);
-                }
-            }
         }
 
         params.qNameToID[qName] = i;
     }
-
+    
     // arange the alignments in the "neighboring matrix"
     int ID = 0;
     int count = 0;
     for (auto record : alignments.records) {
         string qName = toCString(record.qName);
-        
-        if (paired_end) {
-            qName = qName.substr(0, qName.find('.', 0));    
-        }
-        
         int read_id = params.qNameToID[qName];
 
         if (record.rID != record.INVALID_REFID) {
             count++;
-            if (read_processed[read_id] == false) {
+            // reads that have at least one good alignment
+            // here, I rely on bowtie to provide no discordant alignments
+            if (!read_processed[read_id]) {
                 params.eff_num_reads++;
             }
             
@@ -140,7 +132,7 @@ void isomorph::RsemEstimator::preprocess_data(const CharString& transcripts,
 void isomorph::RsemEstimator::precalc_posteriors(const EMParams& params,
                                                 vector<vector<double> >& posteriors) {
     
-    cout << "Precalulcating posterior probabilities" << endl;
+    cerr << "Precalulcating posterior probabilities." << endl;
     auto& transcripts = params.transcripts;
     auto& reads = params.reads;
     auto& pi_x_n = params.pi_x_n;
@@ -177,14 +169,11 @@ void isomorph::RsemEstimator::precalc_posteriors(const EMParams& params,
             
             v.emplace_back(P_sum);            
         }
-//        // reads with no transcripts assigned
-//        if (pi_x_n[n].size() == 0) {
-//            
-//        }
+
         posteriors.emplace_back(v);
     }
     
-    cout << "Done precalculating posteriors." << endl;                                                    
+    cerr << "Done precalculating posteriors." << endl;                                                    
 }                   
 
 void isomorph::RsemEstimator::EMAlgorithm(EMParams& params, EMResult& result) {
@@ -216,7 +205,7 @@ void isomorph::RsemEstimator::EMAlgorithm(EMParams& params, EMResult& result) {
             // isoforms joined to this read
             for (int t = 0; t < pi_x_n[n].size(); ++t) {
                 int i = pi_x_n[n][t].first;
-                int transcript_len = length(transcripts.seqs[i]);
+                int transcript_len = seqan::length(transcripts.seqs[i]);
                 double coeff = expressions[i] / transcript_len;
                 // P(rn|znijk=1)
                 double P_sum = read_posteriors[n][t];
@@ -240,24 +229,46 @@ void isomorph::RsemEstimator::EMAlgorithm(EMParams& params, EMResult& result) {
     for (int i = 0; i < num_transcripts; ++i) {
         result.relative_expressions.emplace_back(expressions[i]);
     }
+    
+    cerr << "EM is done." << endl;
 }
 
 void isomorph::RsemEstimator::output_result(const FastAData& transcripts, 
                                             const EMResult& result, 
                                             const string filename) {
-                                                
+    
+    cerr << "Outputing the results." << endl;                                                
     ofstream output;
     output.open(filename.c_str(), ofstream::out | ofstream::trunc);
     
+    int num_transcripts = result.relative_expressions.size();
     double sum = 0;
-    for (int i = 0; i < result.relative_expressions.size(); ++i) {
-        output << ">" << transcripts.ids[i] << endl;
-        output << result.relative_expressions[i] << endl;
+    // needed to transform to TPM according to RSEM paper
+    double v_sum = 0;
+    vector<double> tpm(num_transcripts, 0);
+    
+    for (int i = 0; i < num_transcripts; ++i) {
         sum += result.relative_expressions[i];
+        // calculate TPM
+        int t_len = seqan::length(transcripts.seqs[i]);
+        tpm[i] = (result.relative_expressions[i] / t_len);
+        v_sum += tpm[i];
+    }
+    
+    double tpm_sum = 0;
+    for (int i = 0; i < num_transcripts; ++i) {
+        tpm[i] *= 1e6 / v_sum;
+        tpm_sum += tpm[i];
+        
+        // first ni_i then tpm_i
+        output << ">" << transcripts.ids[i] << endl;
+        output << result.relative_expressions[i];
+        output << '\t' << tpm[i] << endl;
     }
     
     cerr << "Expression sum: " << sum << endl;
-    
+    cerr << "TPM sum: " << tpm_sum << endl;
     output.close();
+    cerr << "Done outputing results." << endl;
     return;
 }

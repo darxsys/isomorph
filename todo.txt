@@ -1,5 +1,6 @@
-1) matrica za racunanje vjerojatnosti pozicije ce kod mene biti drukcija
-2) u principu oni alignmente gledaju samo od pozicija koje im je bowtie dao, a ja cijeli transkript
-3) position-independent background distribution za noise izoformu mi je sad malo problem jer ne znam to naci
-4) count estimator trebam prilagoditi za single i poboljsati za paired end readove
-5) Dodati error check u sve inpute/outpute
+1) vidjeti kako tocno baratati s tim alignmentima u SAM formatu, za paired endove
+2) dodati paired-endove kao struct koji ce mi omoguciti to gore grupiranje 
+
+- matrica za racunanje vjerojatnosti pozicije ce kod mene biti drukcija
+- count estimator trebam prilagoditi za single i poboljsati za paired end readove
+- Dodati error check u sve inpute/outpute

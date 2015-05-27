@@ -6,11 +6,13 @@
 namespace isomorph {
 	struct PairedRead : public Read {
 		public:
-		seqan::CharString left_id;
+		int id;
+		// full id from fastq file
+		seqan::CharString left_fa_id;
 		seqan::Dna5String left_seq;
 		seqan::CharString left_phred;
 		
-		seqan::CharString right_id;
+		seqan::CharString right_fa_id;
 		seqan::Dna5String right_seq;
 		seqan::CharString right_phred;
 		
