@@ -1,5 +1,6 @@
 #include <ctype.h>
 #include <cstdio>
+#include <cstdlib>
 #include <iostream>
 #include <vector>
 #include <unordered_set>
@@ -260,16 +261,16 @@ void isomorph::RsemEstimator::create_paired_end(const SamData& alignments,
                     }
                 }
                 
-                if (insert_i == -1) {
-                    if (hasFlagFirst(record)) {
-                        read->pi_x_n.emplace_back(record.rID, record.beginPos, -1);
-                    } else {
-                        read->pi_x_n.emplace_back(record.rID, -1, record.beginPos);
-                    }
-                }
-            
-                insert_i = -1;
             }
+            
+            if (insert_i == -1) {
+                if (hasFlagFirst(record)) {
+                    read->pi_x_n.emplace_back(record.rID, record.beginPos, -1);
+                } else {
+                    read->pi_x_n.emplace_back(record.rID, -1, record.beginPos);
+                }
+            }
+            insert_i = -1;
         } 
     }
     
@@ -355,11 +356,10 @@ void isomorph::RsemEstimator::precalc_posteriors(const EMParams& params,
                 // second mate
                 position = get<2>(record);
                 for (int j = 0; j < read_len && j + position < transcript_len; ++j) {
-                    // forward direction
                     if (pairs.seqs[n][j] != transcripts.seqs[i][position + j]) {
                         Prf *= 0.5;
                     }
-                    // reverse direction
+                    
                     if (reverse_complement(pairs.seqs[n][j]) != toupper(transcripts.seqs[i][position + j])) {
                         Prr *= 0.5;
                     }
@@ -367,6 +367,10 @@ void isomorph::RsemEstimator::precalc_posteriors(const EMParams& params,
                 
                 P_sum += Prf * 0.5; // orientation probability
                 P_sum += Prr * 0.5;
+
+                if (P_sum < 1e-9) {
+                    cout << "A suspicious P_sum: " << P_sum << endl;
+                }
                 v.emplace_back(P_sum);            
             }
             posteriors.emplace_back(v);
@@ -395,7 +399,7 @@ void isomorph::RsemEstimator::EMAlgorithm(EMParams& params, EMResult& result) {
     vector<double> pre_m_expressions(num_transcripts, 0);
     int iter = 0;
     
-    cerr << "Entering the EM iterations." << endl;
+    cerr << "Entering EM iterations." << endl;
     if (!params.paired_end) {
         auto& single_reads = params.single_reads;
         do {
@@ -437,14 +441,14 @@ void isomorph::RsemEstimator::EMAlgorithm(EMParams& params, EMResult& result) {
             for (int n = 0; n < num_reads; ++n) {
                 double read_expect_sum = 0;
                 const unique_ptr<PairedRead>& read = paired_reads[n];
-                
+
                 // isoforms joined to this read
                 for (int t = 0; t < read->pi_x_n.size(); ++t) {
+                    // P(rn | Znijk)
                     auto record = read->pi_x_n[t];
                     int i = get<0>(record);
                     int transcript_len = seqan::length(transcripts.seqs[i]);
                     double coeff = expressions[i] / transcript_len;
-                    // P(rn|znijk=1)
                     double P_sum = read_posteriors[n][t];
                     read_expect_sum += P_sum * coeff;
                 }
@@ -459,15 +463,14 @@ void isomorph::RsemEstimator::EMAlgorithm(EMParams& params, EMResult& result) {
             
             // M-Step
             for (int i = 0; i < num_transcripts; ++i) {
-                expressions[i] = pre_m_expressions[i] / params.eff_num_reads;   
+                expressions[i] = pre_m_expressions[i] / params.eff_num_reads;
             }
-        } while (++iter < 1000);        
+        } while (++iter < 1000);   
     }
     
     for (int i = 0; i < num_transcripts; ++i) {
         result.relative_expressions.emplace_back(expressions[i]);
     }
-    
     cerr << "EM is done." << endl;
 }
 
