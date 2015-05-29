@@ -60,7 +60,7 @@ void isomorph::RsemEstimator::preprocess_data(const CharString& transcripts,
     string pairs_str(toCString(pairs));
 
     // builds bowtie index
-    string command = "bowtie2-build " + transcripts_str + " " + output_dir + "/isomorph-bowtie-index";
+    string command = "bowtie2-build -f " + transcripts_str + " " + output_dir + "/isomorph-bowtie-index";
     execute_command(command.c_str());
 
     // runs the alignment
@@ -96,45 +96,6 @@ void isomorph::RsemEstimator::preprocess_data(const CharString& transcripts,
         create_single_end(alignments, params);
     }
 
-//    vector<pair<int, int> > v;
-//    params.pi_x_n.insert(params.pi_x_n.begin(), 
-//                         num_reads,
-//                         v);
-//    
-//    vector<bool> read_processed(num_reads, false);
-//        
-//    for (int i = 0; i < num_reads; ++i) {
-//        string qName = toCString(params.reads.ids[i]);
-//        int pos = qName.find(' ', 0);
-//        
-//        if (pos != string::npos) {
-//            qName = qName.substr(0, pos);
-//        }
-//
-//        params.qNameToID[qName] = i;
-//    }
-//    
-//    // arange the alignments in the "neighboring matrix"
-//    int ID = 0;
-//    int count = 0;
-//    for (auto record : alignments.records) {
-//        string qName = toCString(record.qName);
-//        int read_id = params.qNameToID[qName];
-//
-//        if (record.rID != record.INVALID_REFID) {
-//            count++;
-//            // reads that have at least one good alignment
-//            // here, I rely on bowtie to provide no discordant alignments
-//            if (!read_processed[read_id]) {
-//                params.eff_num_reads++;
-//            }
-//            
-//            read_processed[read_id] = true;
-//            params.pi_x_n[read_id].emplace_back(record.rID, record.beginPos);
-//        } 
-//    }
-    
-//    cerr << "Number of reads: " << num_reads << endl;
     cerr << "Effective number of reads: " << params.eff_num_reads << endl;
     cerr << "Done preprocessing data." << endl;
     return;
@@ -260,7 +221,6 @@ void isomorph::RsemEstimator::create_paired_end(const SamData& alignments,
                         insert_i = i;
                     }
                 }
-                
             }
             
             if (insert_i == -1) {
