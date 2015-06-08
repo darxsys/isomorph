@@ -1,6 +1,8 @@
 #ifndef SINGLE_READ_H
 #define SINGLE_READ_H
 
+#include "read.h"
+
 namespace isomorph {
 	struct SingleRead : public Read {
 		public:

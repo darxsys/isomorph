@@ -1,6 +1,13 @@
-1) vidjeti kako tocno baratati s tim alignmentima u SAM formatu, za paired endove
-2) dodati paired-endove kao struct koji ce mi omoguciti to gore grupiranje 
+mogu probati jos:
+	- improveati paired end model
+	- ubaciti rpkm/fpkm racunanje
+	- gene uzeti u obzir na slican nacin kao rsem?
+	- staviti nesto iz onih ludih github repoa sto sam nasao?
+	- reference based stuff mozda isto ubaciti, makar primitivno?
+	- noise readovi?
+	- isprobati jos koji assembler?
 
-- matrica za racunanje vjerojatnosti pozicije ce kod mene biti drukcija
+
+- identifiable models?
 - count estimator trebam prilagoditi za single i poboljsati za paired end readove
 - Dodati error check u sve inpute/outpute

@@ -27,10 +27,16 @@ namespace isomorph {
             std::vector<std::unique_ptr<PairedRead> > paired_reads;
             int eff_num_reads;
             bool paired_end;
+
+            // insert size normal dist params
+            double insert_mean;
+            double insert_stdev;
             
             EMParams() {
                 eff_num_reads = 0;
                 paired_end = false;
+                insert_mean = -1;
+                insert_stdev = 0;
             }
         };
     
@@ -49,8 +55,9 @@ namespace isomorph {
                              const seqan::CharString& pairs,
                              const std::string& output_dir, 
                              EMParams& params);
-        
+
         void EMAlgorithm(EMParams& params, EMResult& result);
+
         void precalc_posteriors(const EMParams& params, 
                                 std::vector<std::vector<double> >& posteriors);
                                 

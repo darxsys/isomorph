@@ -1,5 +1,6 @@
 #include <ctype.h>
 #include <cstdio>
+#include <cmath>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -10,6 +11,7 @@
 
 #include "utility.h"
 
+using namespace std;
 using namespace seqan;
 
 /*
@@ -26,6 +28,59 @@ std::string isomorph::execute_command(const char* cmd) {
     }
     pclose(pipe);
     return result;    
+}
+
+void isomorph::estimate_insert_size(const SamData& alignments,
+                          std::pair<double, double>& params) {
+
+    double mean = 0;
+    int num_aligns = 0;
+
+    for (auto record : alignments.records) {
+        if (hasFlagAllProper(record) && hasFlagFirst(record)) {
+            mean += record.tLen;
+            num_aligns++;
+        }
+    }
+
+    mean /= num_aligns;
+    double var = 0;    
+    for (auto record : alignments.records) {
+        if (hasFlagAllProper(record) && hasFlagFirst(record)) {
+            int a = record.tLen - mean;
+            var += a * a;
+        }        
+    }
+
+    var /= (num_aligns-1);
+    params.first = mean;
+    params.second = sqrt(var);
+}
+
+void isomorph::run_alignment(const string& reads,
+                             const string& pairs,
+                             const string& transcripts,
+                             const string& output_dir,
+                             const bool paired_end) {
+    
+    // builds bowtie index
+    string command = "bowtie2-build -f " + transcripts + " " + output_dir + "/isomorph-bowtie-index";
+    execute_command(command.c_str());
+
+    // runs the alignment
+    // parameters are set to be the same as in RSEM with bowtie2
+    if (paired_end) {
+        command = "bowtie2 -q --phred33 --sensitive --dpad 0 --gbar 99999999 --mp 1,1 --np 1 \
+                  --score-min L,0,-0.1 -I 1 -X 1000 --no-mixed --no-discordant \
+                  -p 1 -k 200 -x " + output_dir + "/isomorph-bowtie-index -1 " + reads + " -2 " +
+                  pairs + " -S " + output_dir + "/isomorph.sam";
+    } else {
+        command = "bowtie2 -q --phred33 --sensitive --dpad 0 --gbar 99999999 --mp 1,1 --np 1 \
+                   --score-min L,0,-0.1 -p 1 -k 200 -x " + output_dir + "/isomorph-bowtie-index -U " + reads +
+                   " -S " + output_dir + "/isomorph.sam";
+    }
+    
+    execute_command(command.c_str());                         
 }
 
 void isomorph::print_sam_alignment_records(
@@ -54,7 +109,6 @@ int isomorph::Reader::read_sam(CharString filename,
 
     try {
         BamHeader header;
-        
         readHeader(data->header, samFileIn);
         BamAlignmentRecord record;
 
@@ -90,7 +144,6 @@ int isomorph::Reader::read_fasta(CharString filename,
     }
 
     return 0;
-
 }
 
 /*
@@ -113,5 +166,3 @@ int isomorph::Reader::read_fastq(CharString filename,
 
     return 0;
 }
-
-

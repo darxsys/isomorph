@@ -17,8 +17,8 @@ namespace isomorph {
 		seqan::CharString right_phred;
 		
 		// all the transcript alignments that are good
-		// transcript id, left_position, right_position
-		std::vector<std::tuple<int, int, int> > pi_x_n;				
+		// transcript id, left_position, right_position, insert_size
+		std::vector<std::tuple<int, int, int, int> > pi_x_n;				
 	};
 }
 

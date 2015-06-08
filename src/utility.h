@@ -1,12 +1,16 @@
 #ifndef UTILITY_H
 #define UTILITY_H
 
+#include <cmath>
+
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 #include <seqan/seq_io.h>
 #include <seqan/bam_io.h>
+
+const double PI = 3.14159265358979;
 
 namespace isomorph {
     struct FastQData {
@@ -26,6 +30,19 @@ namespace isomorph {
     };
 
     std::string execute_command(const char* cmd);
+
+    inline double prob_normal(double mean, double stdev, double x) {
+        return 1 / stdev / sqrt(2 * PI) * exp(-((x-mean) * (x-mean)) / 2 / (stdev * stdev));
+    }
+
+    void estimate_insert_size(const SamData& alignments,
+                              std::pair<double, double>& params);
+                              
+    void run_alignment(const std::string& reads,
+                       const std::string& pairs,
+                       const std::string& transcripts,
+                       const std::string& output_dir,
+                       const bool paired_end);
 
     /*
         Prints all the important attributes of sam alignment records.
