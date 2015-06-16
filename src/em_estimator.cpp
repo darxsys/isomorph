@@ -331,13 +331,15 @@ void isomorph::EMEstimator::precalc_posteriors(const EMParams& params,
                 
                 // first mate
                 int position = get<1>(record);
+                CharString& seq = get<4>(record);
                 for (int j = 0; j < read_len && j + position < transcript_len; ++j) {
                     // forward direction
-                    if (reads.seqs[n][j] != transcripts.seqs[i][position + j]) {
+                    if (seq[j] != transcripts.seqs[i][position + j]) {
                         Prf *= 0.5;
                     }
+                    
                     // reverse direction
-                    if (reverse_complement(reads.seqs[n][j]) != 
+                    if (reverse_complement(seq[j]) != 
                             toupper(transcripts.seqs[i][position + j])) {
                         Prr *= 0.5;
                     }
@@ -345,13 +347,14 @@ void isomorph::EMEstimator::precalc_posteriors(const EMParams& params,
                 
                 // second mate
                 position = get<2>(record);
+                seq = get<5>(record);
                 for (int j = 0; j < read_len && j + position < transcript_len; ++j) {
-                    if (reverse_complement(pairs.seqs[n][read_len - j - 1]) != 
-                            toupper(transcripts.seqs[i][position + j])) {
+                    if (seq[j] != toupper(transcripts.seqs[i][position + j])) {
                         Prf *= 0.5;
                     }
                     
-                    if (pairs.seqs[n][read_len - j - 1] != transcripts.seqs[i][position + j]) {
+                    if (reverse_complement(seq[j]) != 
+                            toupper(transcripts.seqs[i][position + j])) {
                         Prr *= 0.5;
                     }
                 }                
