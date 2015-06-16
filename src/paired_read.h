@@ -1,6 +1,9 @@
 #ifndef PAIRED_READ_H
 #define PAIRED_READ_H
 
+#include <seqan/seq_io.h>
+#include <seqan/bam_io.h>
+
 #include "read.h"
 
 namespace isomorph {
@@ -18,7 +21,12 @@ namespace isomorph {
 		
 		// all the transcript alignments that are good
 		// transcript id, left_position, right_position, insert_size
-		std::vector<std::tuple<int, int, int, int> > pi_x_n;				
+		std::vector<std::tuple<int, 
+							   int, 
+							   int, 
+							   int, 
+							   seqan::CharString, 
+							   seqan::CharString> > pi_x_n;				
 	};
 }
 

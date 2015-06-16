@@ -11,7 +11,7 @@
 #include <seqan/file.h>
 #include <seqan/sequence.h>
 
-#include "rsem_estimator.h"
+#include "em_estimator.h"
 #include "utility.h"
 #include "count_estimator.h"
 #include "read.h"
@@ -21,7 +21,7 @@
 using namespace seqan;
 using namespace std;
 
-void isomorph::RsemEstimator::estimate_abundances(CharString reads,
+void isomorph::EMEstimator::estimate_abundances(CharString reads,
                                                   CharString transcripts,
                                                   CharString pairs) {
     
@@ -45,7 +45,7 @@ void isomorph::RsemEstimator::estimate_abundances(CharString reads,
     return;
 }
 
-void isomorph::RsemEstimator::preprocess_data(const CharString& transcripts, 
+void isomorph::EMEstimator::preprocess_data(const CharString& transcripts, 
                                               const CharString& reads,
                                               const CharString& pairs,
                                               const string& output_dir, 
@@ -93,7 +93,7 @@ void isomorph::RsemEstimator::preprocess_data(const CharString& transcripts,
     return;
 }                   
 
-void isomorph::RsemEstimator::create_single_end(const SamData& alignments,
+void isomorph::EMEstimator::create_single_end(const SamData& alignments,
                                                 EMParams& params) {
   
     cerr << "Creating the reads." << endl;    
@@ -147,7 +147,7 @@ void isomorph::RsemEstimator::create_single_end(const SamData& alignments,
     return;  
 }
 
-void isomorph::RsemEstimator::create_paired_end(const SamData& alignments,
+void isomorph::EMEstimator::create_paired_end(const SamData& alignments,
                                                 EMParams& params) {
 
     cerr << "Creating the reads." << endl;
@@ -193,7 +193,9 @@ void isomorph::RsemEstimator::create_paired_end(const SamData& alignments,
 
         // only records that are completely mapped
         if (record.rID != record.INVALID_REFID && 
-            record.rNextId != record.INVALID_REFID) {
+            record.rNextId != record.INVALID_REFID &&
+            (hasFlagRC(record) && !hasFlagNextRC(record) || 
+                !hasFlagRC(record) && hasFlagNextRC(record))) {
                 
             if (!has_alignment[read_id]) {
                 params.eff_num_reads++;
@@ -207,9 +209,11 @@ void isomorph::RsemEstimator::create_paired_end(const SamData& alignments,
                 if (get<0>(elem) == record.rID) {
                     if (hasFlagFirst(record) && get<2>(elem) == record.pNext) {
                         get<1>(elem) = record.beginPos;
+                        get<4>(elem) = record.seq;
                         insert_i = i;
                     } else if (hasFlagLast(record) && get<1>(elem) == record.pNext) {
                         get<2>(elem) = record.beginPos;
+                        get<5>(elem) = record.seq;
                         insert_i = i;
                     }
                 }
@@ -217,9 +221,19 @@ void isomorph::RsemEstimator::create_paired_end(const SamData& alignments,
             
             if (insert_i == -1) {
                 if (hasFlagFirst(record)) {
-                    read->pi_x_n.emplace_back(record.rID, record.beginPos, -1, record.tLen);
+                    read->pi_x_n.emplace_back(record.rID, 
+                                              record.beginPos, 
+                                              -1, 
+                                              record.tLen,
+                                              record.seq,
+                                              "");
                 } else {
-                    read->pi_x_n.emplace_back(record.rID, -1, record.beginPos, record.tLen);
+                    read->pi_x_n.emplace_back(record.rID, 
+                                              -1, 
+                                              record.beginPos, 
+                                              record.tLen,
+                                              "",
+                                              record.seq);
                 }
             }
             insert_i = -1;
@@ -230,7 +244,7 @@ void isomorph::RsemEstimator::create_paired_end(const SamData& alignments,
     return;    
 }
 
-void isomorph::RsemEstimator::precalc_posteriors(const EMParams& params,
+void isomorph::EMEstimator::precalc_posteriors(const EMParams& params,
                                                 vector<vector<double> >& posteriors) {
     
     cerr << "Precalulcating posterior probabilities." << endl;
@@ -358,7 +372,7 @@ void isomorph::RsemEstimator::precalc_posteriors(const EMParams& params,
     return;
 }
 
-void isomorph::RsemEstimator::EMAlgorithm(EMParams& params, EMResult& result) {
+void isomorph::EMEstimator::EMAlgorithm(EMParams& params, EMResult& result) {
     auto& transcripts = params.transcripts;
     auto& reads = params.reads;
     auto& qNameToID = params.qNameToID;
@@ -451,7 +465,7 @@ void isomorph::RsemEstimator::EMAlgorithm(EMParams& params, EMResult& result) {
     cerr << "EM is done." << endl;
 }
 
-void isomorph::RsemEstimator::output_result(const FastAData& transcripts, 
+void isomorph::EMEstimator::output_result(const FastAData& transcripts, 
                                             const EMResult& result, 
                                             const string filename) {
     

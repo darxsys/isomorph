@@ -8,7 +8,7 @@
 
 #include "count_estimator.h"
 #include "utility.h"
-#include "rsem_estimator.h"
+#include "em_estimator.h"
 
 using namespace std;
 using namespace seqan;
@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
          << "right file \t" << pairs_file << '\n'
          << "transcripts \t" << transcripts << endl;
 
-    RsemEstimator estimator;
+    EMEstimator estimator;
     estimator.estimate_abundances(read_file, transcripts, pairs_file);
 
     return 0;
