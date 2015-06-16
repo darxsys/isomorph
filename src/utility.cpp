@@ -1,3 +1,10 @@
+/** @file utility.cpp
+@author Pavlovic:Dario
+@version Revision 0.2
+@brief Utility data and functions used by other classes are implemented here. 
+@date Tuesday, June 16, 2015
+*/
+
 #include <ctype.h>
 #include <cstdio>
 #include <cmath>

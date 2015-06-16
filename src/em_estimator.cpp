@@ -1,3 +1,10 @@
+/** @file em_estimator.cpp
+@author Pavlovic:Dario
+@version Revision 0.2
+@brief EMEstimator class methods are implemented here. 
+@date Tuesday, June 16, 2015
+*/
+
 #include <ctype.h>
 #include <cstdio>
 #include <cstdlib>
