@@ -1,3 +1,11 @@
+/** @file em_estimator.h
+@author Pavlovic:Dario
+@version Revision 0.2
+@brief Declares the em estimator class.
+@details The em estimator header class
+is declared here. This is the core header of isomorph. 
+@date Tuesday, June 16, 2015
+*/
 #ifndef RSEM_ESTIMATOR_H
 #define RSEM_ESTIMATOR_H
 
@@ -11,9 +19,21 @@
 #include "paired_read.h"
 
 namespace isomorph {
-
+   /**
+    *   EMEstimator class. \n
+        This class estimates transcript abundances using a robust statistical model \n
+        by applying the EM algorithm to obtain maximum likelihood estimates \n
+        of the model parameters of the model.
+    */
     class EMEstimator : public Estimator {
     public:
+       /**
+        *   Implementation of estimate_abundances virtual method. \n
+            The method estimates transcript abundances according to the strategy of this class. \n
+            @param reads path to the reads fastq file
+            @param transcripts path to the reconstructed transcripts fasta file
+            @param pairs path to the paired end file, if paired reads are used
+        */      
        virtual void estimate_abundances(seqan::CharString left_pairs, 
                                         seqan::CharString right_pairs,
                                         seqan::CharString transcripts);

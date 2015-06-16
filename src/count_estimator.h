@@ -2,6 +2,8 @@
 @author Pavlovic:Dario
 @version Revision 0.2
 @brief Declares the count estimator class.
+@details The count estimator header class
+is declared here. 
 @date Tuesday, June 16, 2015
 */
 
@@ -17,9 +19,21 @@
 #include "paired_read.h"
 
 namespace isomorph {
-    
+   /**
+    *   CountEstimator class. \n
+        This class estimates transcript abundances using very simple \n
+        ideas of counting number of reads mapped to a transcript as well as \n
+        the number of bases mapped to a certain isoform and reports the result.
+    */
     class CountEstimator : public Estimator {
     public:
+       /**
+        *   Implementation of estimate_abundances virtual method. \n
+            The method estimates transcript abundances according to the strategy of this class. \n
+            @param reads path to the reads fastq file
+            @param transcripts path to the reconstructed transcripts fasta file
+            @param pairs path to the paired end file, if paired reads are used
+        */        
         virtual void estimate_abundances(seqan::CharString reads, 
                                          seqan::CharString transcripts,
                                          seqan::CharString pairs="");

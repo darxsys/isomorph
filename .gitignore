@@ -37,3 +37,4 @@ isomorph
 *.json
 *.fasta
 
+docs/*
