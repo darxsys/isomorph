@@ -69,8 +69,7 @@ namespace isomorph {
                                   
         void output_result(const FastAData& transcripts,
                            const CountResult& result,
-                           const std::string& output_file);                             
-                                             
+                           const std::string& output_file);                                       
     };
 }
 

@@ -45,12 +45,21 @@ using namespace std;
 using namespace seqan;
 using namespace isomorph;
 
-int main(int argc, char** argv) {
+struct Args {
+    bool paired_end;
+    CharString reads;
+    CharString pairs;
+    CharString transcripts;
+    bool use_count;
+};
+
+int parse_arguments(int argc, char** argv, Args& args) {
     ArgumentParser parser("isomorph");
 
     addOption(parser, ArgParseOption(
-        "S", "single-end", "Use single-end reads. DEFAULT=false",
-        ArgParseArgument::INTEGER, "INTEGER"));
+        "S", "single-end", "Use single-end reads."));
+    addOption(parser, ArgParseOption(
+        "C", "count", "Use simple count instead of EM algorithm."));        
     addOption(parser, ArgParseOption(
         "R", "reads", "Reads file.",
         ArgParseArgument::STRING, "STRING"));
@@ -60,32 +69,48 @@ int main(int argc, char** argv) {
     addOption(parser, ArgParseOption(
         "T", "transcripts", "Transcript file.",
         ArgParseArgument::STRING, "STRING"));
+    
+    
+    setRequired(parser, "R");
+    setRequired(parser, "T");
 
     ArgumentParser::ParseResult res = parse(parser, argc, argv);
 
     if (res != ArgumentParser::PARSE_OK) {
-        cout << "ERROR while parsing arguments." << endl;
-        return res == ArgumentParser::PARSE_ERROR;
+        if (!isSet(parser, "help")) {
+            cerr << "Error while parsing arguments." << endl;
+        }
+        
+        return -1;
     }
 
-    CharString read_file = "";
-    CharString pairs_file = "";
-    CharString transcripts = "";
-    int use_single_end = 0;
+    getOptionValue(args.reads, parser, "reads");
     
-    getOptionValue(use_single_end, parser, "single-end");
-    getOptionValue(read_file, parser, "reads");
-    if (use_single_end == 0) {
-        getOptionValue(pairs_file, parser, "pairs");
+    args.paired_end = !isSet(parser, "single-end");
+    if (args.paired_end) {
+        getOptionValue(args.pairs, parser, "pairs");
     }
-    getOptionValue(transcripts, parser, "transcripts");
+        
+    getOptionValue(args.transcripts, parser, "transcripts");
+    args.use_count = isSet(parser, "count"); 
+    return 0;   
+}
 
-    cout << "left_file \t" << read_file << '\n'
-         << "right file \t" << pairs_file << '\n'
-         << "transcripts \t" << transcripts << endl;
-
-    EMEstimator estimator;
-    estimator.estimate_abundances(read_file, transcripts, pairs_file);
+int main(int argc, char** argv) {
+    Args args;
+    int ret = parse_arguments(argc, argv, args);
+    
+    if (ret != 0) {
+        return -1;
+    }
+    
+    if (args.use_count) {
+        CountEstimator estimator;
+        estimator.estimate_abundances(args.reads, args.transcripts, args.pairs);
+    } else {
+        EMEstimator estimator;
+        estimator.estimate_abundances(args.reads, args.transcripts, args.pairs);
+    }
 
     return 0;
 }

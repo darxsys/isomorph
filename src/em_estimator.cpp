@@ -472,6 +472,7 @@ void isomorph::EMEstimator::EMAlgorithm(EMParams& params, EMResult& result) {
     for (int i = 0; i < num_transcripts; ++i) {
         result.relative_expressions.emplace_back(expressions[i]);
     }
+    
     cerr << "EM is done." << endl;
 }
 

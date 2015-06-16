@@ -50,7 +50,8 @@ void isomorph::CountEstimator::preprocess_data(const CharString& transcripts,
                                                const CharString& pairs,
                                                const string& output_dir,
                                                AlgoParams& params) {
-                                                   
+    
+    cerr << "Preprocessing data." << endl;                                                   
     bool paired_end = pairs == "" ? false : true;
     isomorph::Reader reader;
 
@@ -75,12 +76,14 @@ void isomorph::CountEstimator::preprocess_data(const CharString& transcripts,
     CharString sam(output_dir + "/isomorph.sam");
     reader.read_sam(sam, &params.alignments);
     params.paired_end = paired_end;
+    cerr << "Done preprocessing data." << endl;
     return;    
 }
 
 void isomorph::CountEstimator::calculate_read_count(const AlgoParams& params,
                                                     CountResult& result) {
                                                         
+    cerr << "Calculating read counts." << endl;                                             
     // calculates the counts
     auto ids = params.transcripts.ids;
     vector<long long> counts(length(ids), 0);
@@ -89,7 +92,7 @@ void isomorph::CountEstimator::calculate_read_count(const AlgoParams& params,
     double counts_sum = 0;
 
     for (int j = 0; j < length(records); ++j) {
-        if (records[j].rID >= 0 and 
+        if (records[j].rID != records[j].INVALID_REFID &&
                 used_reads.find(toCString(records[j].qName)) == used_reads.end()) {
 
             counts[records[j].rID]++;
@@ -102,6 +105,7 @@ void isomorph::CountEstimator::calculate_read_count(const AlgoParams& params,
         result.counts.emplace_back(counts[i] / counts_sum);
     }
     
+    cerr << "Done calculating." << endl;
     return;
 }
 
