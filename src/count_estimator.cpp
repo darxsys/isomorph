@@ -67,6 +67,7 @@ void isomorph::CountEstimator::preprocess_data(const CharString& transcripts,
     // reads sam data
     CharString sam(output_dir + "/isomorph.sam");
     reader.read_sam(sam, &params.alignments);
+    params.paired_end = paired_end;
     return;    
 }
 
