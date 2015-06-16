@@ -1,3 +1,10 @@
+/** @file count_estimator.h
+@author Pavlovic:Dario
+@version Revision 0.2
+@brief Declares the count estimator class.
+@date Tuesday, June 16, 2015
+*/
+
 #ifndef COUNT_ESTIMATOR_H
 #define COUNT_ESTIMATOR_H
 
