@@ -45,6 +45,9 @@ using namespace std;
 using namespace seqan;
 using namespace isomorph;
 
+/**
+ * Struct to group and encapsulate parsed arguments.
+ */
 struct Args {
     bool paired_end;
     CharString reads;
@@ -53,6 +56,9 @@ struct Args {
     bool use_count;
 };
 
+/**
+ * Parses command line arguments using seqan parsing API.
+ */
 int parse_arguments(int argc, char** argv, Args& args) {
     ArgumentParser parser("isomorph");
 

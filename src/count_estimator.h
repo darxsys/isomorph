@@ -108,7 +108,7 @@ namespace isomorph {
         void calculate_read_count(const AlgoParams& params,
                                   CountResult& result);
         /**
-         * Outputs the result to a file called isomorph.abundances.fasta.
+         * Outputs the result.
          */                                  
         void output_result(const FastAData& transcripts,
                            const CountResult& result,

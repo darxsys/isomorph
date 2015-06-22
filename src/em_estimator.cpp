@@ -1,7 +1,8 @@
 /** @file em_estimator.cpp
 @author Pavlovic:Dario
 @version Revision 0.2
-@brief EMEstimator class methods are implemented here. 
+@brief EMEstimator class methods are implemented here. \n
+Detailed docs are available in the corresponding .h file.
 @date Tuesday, June 16, 2015
 */
 
@@ -29,8 +30,8 @@ using namespace seqan;
 using namespace std;
 
 void isomorph::EMEstimator::estimate_abundances(CharString reads,
-                                                  CharString transcripts,
-                                                  CharString pairs) {
+                                                CharString transcripts,
+                                                CharString pairs) {
     
     string dir = "isomorph-tmp";
     string mkdir = "mkdir -p " + dir;
@@ -53,10 +54,10 @@ void isomorph::EMEstimator::estimate_abundances(CharString reads,
 }
 
 void isomorph::EMEstimator::preprocess_data(const CharString& transcripts, 
-                                              const CharString& reads,
-                                              const CharString& pairs,
-                                              const string& output_dir, 
-                                              EMParams& params) {
+                                            const CharString& reads,
+                                            const CharString& pairs,
+                                            const string& output_dir, 
+                                             EMParams& params) {
     
     cerr << "Preprocessing data." << endl;
     bool paired_end = pairs == CharString("") ? false : true;
@@ -101,7 +102,7 @@ void isomorph::EMEstimator::preprocess_data(const CharString& transcripts,
 }                   
 
 void isomorph::EMEstimator::create_single_end(const SamData& alignments,
-                                                EMParams& params) {
+                                              EMParams& params) {
   
     cerr << "Creating the reads." << endl;    
     auto& reads = params.reads;
@@ -155,7 +156,7 @@ void isomorph::EMEstimator::create_single_end(const SamData& alignments,
 }
 
 void isomorph::EMEstimator::create_paired_end(const SamData& alignments,
-                                                EMParams& params) {
+                                              EMParams& params) {
 
     cerr << "Creating the reads." << endl;
     auto& reads = params.reads;
@@ -252,7 +253,7 @@ void isomorph::EMEstimator::create_paired_end(const SamData& alignments,
 }
 
 void isomorph::EMEstimator::precalc_posteriors(const EMParams& params,
-                                                vector<vector<double> >& posteriors) {
+                                               vector<vector<double> >& posteriors) {
     
     cerr << "Precalulcating posterior probabilities." << endl;
     auto& transcripts = params.transcripts;
@@ -477,8 +478,8 @@ void isomorph::EMEstimator::EMAlgorithm(EMParams& params, EMResult& result) {
 }
 
 void isomorph::EMEstimator::output_result(const FastAData& transcripts, 
-                                            const EMResult& result, 
-                                            const string filename) {
+                                          const EMResult& result, 
+                                          const string filename) {
     
     cerr << "Outputing results." << endl;                                                
     ofstream output;

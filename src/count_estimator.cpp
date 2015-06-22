@@ -1,7 +1,8 @@
 /** @file em_estimator.cpp
 @author Pavlovic:Dario
 @version Revision 0.2
-@brief CountEstimator class methods are implemented here. 
+@brief CountEstimator class methods are implemented here. \n 
+Detailed docs are available in the corresponding .h file.
 @date Tuesday, June 16, 2015
 */
 

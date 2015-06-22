@@ -140,8 +140,7 @@ namespace isomorph {
                                EMParams& params);                               
         
         /**
-         * Outputs the EM algorithm result to a file called isomorph.abundances.fasta. \n
-         Output format is: \n 
+         * Outputs the EM algorithm result. Output format is: \n 
          >transcript_name \n
          &tau; \tab TPM_value
          */                                
