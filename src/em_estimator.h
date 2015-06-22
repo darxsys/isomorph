@@ -38,20 +38,58 @@ namespace isomorph {
                                         seqan::CharString right_pairs,
                                         seqan::CharString transcripts);
     private:
+        /**
+         * The struct encapsulates all the parameters used by EM algorithm and passed to it from the outside.
+         */
         struct EMParams {
+            /**
+             * Serves to map read names collected from fastq files to corresponding integer indices of reads.
+             */
             std::unordered_map<std::string, int> qNameToID;
+            /**
+             * Reads from file. Encapsulates seqan data structures.
+             */
             FastQData reads;
+            /**
+             * If paired-end is used, reads coming from the second file are stored here.
+             */
             FastQData pairs;
+            /**
+             * Stores transcript information.
+             */
             FastAData transcripts;
+            /**
+             * If single reads are used, this is where their information regarding \n
+               mappings will be stored for EM processing.
+             */
             std::vector<std::unique_ptr<SingleRead> > single_reads;
+            /**
+             * If paired reads are used, this is where their information regarding \n
+               mappings will be stored for EM processing.
+             */            
             std::vector<std::unique_ptr<PairedRead> > paired_reads;
+            /**
+             * This is the number of reads that have a mapping and are not ignored. \n
+               This will be gone in future versions when single_reads and paired_reads \n
+               will be containing only information for valid reads.
+             */
             int eff_num_reads;
+            /**
+             * If paired-end is used, this is set to true.
+             */
             bool paired_end;
-
-            // insert size normal dist params
+            /**
+             * When paired-end is used, estimate of the mean of the insert sizes is stored here.
+             */
             double insert_mean;
+            /**
+             * When paired-end is used, estimate of the standard deviation of the insert sizes is stored here.
+             */            
             double insert_stdev;
             
+            /**
+             * The constructor that sets some of the information to invalid values.
+             */
             EMParams() {
                 eff_num_reads = 0;
                 paired_end = false;
@@ -59,12 +97,15 @@ namespace isomorph {
                 insert_stdev = 0;
             }
         };
-    
+        
+        /**
+         * The resulting &tau; values are stored here and forwarded to postprocessing (if done) and output.
+         */
         struct EMResult {
             std::vector<double> relative_expressions;
         };
         
-        /*
+        /**
             Method does preprocesing of data, elimination of extra stuff and creates
             necessary data structures for the EM to operate on. Most
             of the ideas are described in the original RSEM paper as
@@ -75,18 +116,35 @@ namespace isomorph {
                              const seqan::CharString& pairs,
                              const std::string& output_dir, 
                              EMParams& params);
-
+        /**
+         * The core EM algorithm is done here.
+         */
         void EMAlgorithm(EMParams& params, EMResult& result);
-
+        
+        /**
+         * The method precalculates some probabilities that don't need to be recalculated anymore.
+         */
         void precalc_posteriors(const EMParams& params, 
                                 std::vector<std::vector<double> >& posteriors);
-                                
+        
+        /**
+         * Parses the SAM mapping file and creates information for paired reads and their mappings.
+         */                        
         void create_paired_end(const SamData& alignments,
                                EMParams& params);
-                               
+        
+        /**
+         * Parses the SAM mapping file and creates information for single reads and their mappings.
+         */                               
         void create_single_end(const SamData& alignments,
                                EMParams& params);                               
-                                
+        
+        /**
+         * Outputs the EM algorithm result to a file called isomorph.abundances.fasta. \n
+         Output format is: \n 
+         >transcript_name \n
+         &tau; \tab TPM_value
+         */                                
         void output_result(const FastAData& transcripts, 
                            const EMResult& result, 
                            const std::string filename);
