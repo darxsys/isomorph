@@ -1,0 +1,13 @@
+mogu probati jos:
+	- improveati paired end model
+	- ubaciti rpkm/fpkm racunanje
+	- gene uzeti u obzir na slican nacin kao rsem?
+	- staviti nesto iz onih ludih github repoa sto sam nasao?
+	- reference based stuff mozda isto ubaciti, makar primitivno?
+	- noise readovi?
+	- isprobati jos koji assembler?
+
+
+- identifiable models?
+- count estimator trebam prilagoditi za single i poboljsati za paired end readove
+- Dodati error check u sve inpute/outpute
