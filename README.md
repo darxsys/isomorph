@@ -9,7 +9,7 @@ fit the needs of our own lab and will in the future be changed and rewritten.
 ## Installation
 
 To install, check out the repository and run make. This will generate a binary which
-you can then be included in the PATH, if wanted.
+you can then include in the PATH, if wanted.
 
 To create the documentation, type make docs. Make sure to have doxygen and graphviz installed.
 
