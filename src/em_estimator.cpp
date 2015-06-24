@@ -1,3 +1,11 @@
+/** @file em_estimator.cpp
+@author Pavlovic:Dario
+@version Revision 0.2
+@brief EMEstimator class methods are implemented here. \n
+Detailed docs are available in the corresponding .h file.
+@date Tuesday, June 16, 2015
+*/
+
 #include <ctype.h>
 #include <cstdio>
 #include <cstdlib>
@@ -11,7 +19,7 @@
 #include <seqan/file.h>
 #include <seqan/sequence.h>
 
-#include "rsem_estimator.h"
+#include "em_estimator.h"
 #include "utility.h"
 #include "count_estimator.h"
 #include "read.h"
@@ -21,11 +29,11 @@
 using namespace seqan;
 using namespace std;
 
-void isomorph::RsemEstimator::estimate_abundances(CharString reads,
-                                                  CharString transcripts,
-                                                  CharString pairs) {
+void isomorph::EMEstimator::estimate_abundances(CharString reads,
+                                                CharString transcripts,
+                                                CharString pairs) {
     
-    string dir = "bowtie-tmp";
+    string dir = "isomorph-tmp";
     string mkdir = "mkdir -p " + dir;
     execute_command(mkdir.c_str());    
     EMParams params;
@@ -45,11 +53,11 @@ void isomorph::RsemEstimator::estimate_abundances(CharString reads,
     return;
 }
 
-void isomorph::RsemEstimator::preprocess_data(const CharString& transcripts, 
-                                              const CharString& reads,
-                                              const CharString& pairs,
-                                              const string& output_dir, 
-                                              EMParams& params) {
+void isomorph::EMEstimator::preprocess_data(const CharString& transcripts, 
+                                            const CharString& reads,
+                                            const CharString& pairs,
+                                            const string& output_dir, 
+                                             EMParams& params) {
     
     cerr << "Preprocessing data." << endl;
     bool paired_end = pairs == CharString("") ? false : true;
@@ -58,25 +66,12 @@ void isomorph::RsemEstimator::preprocess_data(const CharString& transcripts,
     string transcripts_str(toCString(transcripts)); 
     string reads_str(toCString(reads));
     string pairs_str(toCString(pairs));
-
-    // builds bowtie index
-    string command = "bowtie2-build -f " + transcripts_str + " " + output_dir + "/isomorph-bowtie-index";
-    execute_command(command.c_str());
-
-    // runs the alignment
-    // parameters are set to be the same as in RSEM with bowtie2
-    if (paired_end) {
-        command = "bowtie2 -q --phred33 --sensitive --dpad 0 --gbar 99999999 --mp 1,1 --np 1 \
-                  --score-min L,0,-0.1 -I 1 -X 1000 --no-mixed --no-discordant \
-                  -p 1 -k 200 -x " + output_dir + "/isomorph-bowtie-index -1 " + reads_str + " -2 " +
-                  toCString(pairs_str) + " -S " + output_dir + "/isomorph.sam";
-    } else {
-        command = "bowtie2 -q --phred33 --sensitive --dpad 0 --gbar 99999999 --mp 1,1 --np 1 \
-                   --score-min L,0,-0.1 -p 1 -k 200 -x " + output_dir + "/isomorph-bowtie-index -U " + reads_str +
-                   " -S " + output_dir + "/isomorph.sam";
-    }
     
-    execute_command(command.c_str());
+    run_alignment(reads_str, 
+                  pairs_str, 
+                  transcripts_str, 
+                  output_dir, 
+                  paired_end);
 
     // reads sam data
     isomorph::SamData alignments;
@@ -89,9 +84,14 @@ void isomorph::RsemEstimator::preprocess_data(const CharString& transcripts,
     int num_transcripts = length(params.transcripts.ids);
 
     if (paired_end) {
-        FastQData pairs_data;
         reader.read_fastq(pairs, &params.pairs);
         create_paired_end(alignments, params);
+
+        pair<double, double> insert_params;
+        estimate_insert_size(alignments, insert_params);
+        params.insert_mean = insert_params.first;
+        params.insert_stdev = insert_params.second;
+
     } else {
         create_single_end(alignments, params);
     }
@@ -101,8 +101,8 @@ void isomorph::RsemEstimator::preprocess_data(const CharString& transcripts,
     return;
 }                   
 
-void isomorph::RsemEstimator::create_single_end(const SamData& alignments,
-                                                EMParams& params) {
+void isomorph::EMEstimator::create_single_end(const SamData& alignments,
+                                              EMParams& params) {
   
     cerr << "Creating the reads." << endl;    
     auto& reads = params.reads;
@@ -155,8 +155,8 @@ void isomorph::RsemEstimator::create_single_end(const SamData& alignments,
     return;  
 }
 
-void isomorph::RsemEstimator::create_paired_end(const SamData& alignments,
-                                                EMParams& params) {
+void isomorph::EMEstimator::create_paired_end(const SamData& alignments,
+                                              EMParams& params) {
 
     cerr << "Creating the reads." << endl;
     auto& reads = params.reads;
@@ -201,7 +201,9 @@ void isomorph::RsemEstimator::create_paired_end(const SamData& alignments,
 
         // only records that are completely mapped
         if (record.rID != record.INVALID_REFID && 
-            record.rNextId != record.INVALID_REFID) {
+            record.rNextId != record.INVALID_REFID &&
+            (hasFlagRC(record) && !hasFlagNextRC(record) || 
+                !hasFlagRC(record) && hasFlagNextRC(record))) {
                 
             if (!has_alignment[read_id]) {
                 params.eff_num_reads++;
@@ -215,9 +217,11 @@ void isomorph::RsemEstimator::create_paired_end(const SamData& alignments,
                 if (get<0>(elem) == record.rID) {
                     if (hasFlagFirst(record) && get<2>(elem) == record.pNext) {
                         get<1>(elem) = record.beginPos;
+                        get<4>(elem) = record.seq;
                         insert_i = i;
                     } else if (hasFlagLast(record) && get<1>(elem) == record.pNext) {
                         get<2>(elem) = record.beginPos;
+                        get<5>(elem) = record.seq;
                         insert_i = i;
                     }
                 }
@@ -225,9 +229,19 @@ void isomorph::RsemEstimator::create_paired_end(const SamData& alignments,
             
             if (insert_i == -1) {
                 if (hasFlagFirst(record)) {
-                    read->pi_x_n.emplace_back(record.rID, record.beginPos, -1);
+                    read->pi_x_n.emplace_back(record.rID, 
+                                              record.beginPos, 
+                                              -1, 
+                                              record.tLen,
+                                              record.seq,
+                                              "");
                 } else {
-                    read->pi_x_n.emplace_back(record.rID, -1, record.beginPos);
+                    read->pi_x_n.emplace_back(record.rID, 
+                                              -1, 
+                                              record.beginPos, 
+                                              record.tLen,
+                                              "",
+                                              record.seq);
                 }
             }
             insert_i = -1;
@@ -238,8 +252,8 @@ void isomorph::RsemEstimator::create_paired_end(const SamData& alignments,
     return;    
 }
 
-void isomorph::RsemEstimator::precalc_posteriors(const EMParams& params,
-                                                vector<vector<double> >& posteriors) {
+void isomorph::EMEstimator::precalc_posteriors(const EMParams& params,
+                                               vector<vector<double> >& posteriors) {
     
     cerr << "Precalulcating posterior probabilities." << endl;
     auto& transcripts = params.transcripts;
@@ -268,12 +282,24 @@ void isomorph::RsemEstimator::precalc_posteriors(const EMParams& params,
                 for (int j = 0; j < read_len && j + position < transcript_len; ++j) {
                     // forward direction
                     if (reads.seqs[n][j] != transcripts.seqs[i][position + j]) {
-                        Prf *= 0.5;
+                        if (j < transcript_len / 3.) {
+                            Prf *= 0.3;
+                        } else if (j < 2 * transcript_len / 3.) {
+                            Prf *= 0.6;
+                        } else {
+                           Prf *= 0.9;
+                        }
                     }
                     
                     // reverse direction
                     if (reverse_complement(reads.seqs[n][j]) != toupper(transcripts.seqs[i][position + j])) {
-                        Prr *= 0.5;
+                        if (j < transcript_len / 3.) {
+                            Prf *= 0.3;
+                        } else if (j < 2 * transcript_len / 3.) {
+                            Prf *= 0.6;
+                        } else {
+                           Prf *= 0.9;
+                        }
                     }
                 }
                 
@@ -283,9 +309,20 @@ void isomorph::RsemEstimator::precalc_posteriors(const EMParams& params,
             }
             posteriors.emplace_back(v);
         }
+
     } else {
         auto& pairs = params.pairs;
         auto& paired_reads = params.paired_reads;
+
+        // precalculate normalization factors for each isoform for insert sizes
+        vector<double> norm_factors(num_transcripts, 0);
+        for (int i = 0; i < num_transcripts; ++i) {
+            double sum = 0;
+            for (int l = 0; l < length(transcripts.seqs[i]); ++l) {
+                sum += prob_normal(params.insert_mean, params.insert_stdev, l);
+            }
+            norm_factors[i] = sum;
+        }
         
         for (int n = 0; n < num_reads; ++n) {
             vector<double> v;
@@ -302,35 +339,40 @@ void isomorph::RsemEstimator::precalc_posteriors(const EMParams& params,
                 
                 // first mate
                 int position = get<1>(record);
+                CharString& seq = get<4>(record);
                 for (int j = 0; j < read_len && j + position < transcript_len; ++j) {
                     // forward direction
-                    if (reads.seqs[n][j] != transcripts.seqs[i][position + j]) {
+                    if (seq[j] != transcripts.seqs[i][position + j]) {
                         Prf *= 0.5;
                     }
+                    
                     // reverse direction
-                    if (reverse_complement(reads.seqs[n][j]) != toupper(transcripts.seqs[i][position + j])) {
+                    if (reverse_complement(seq[j]) != 
+                            toupper(transcripts.seqs[i][position + j])) {
                         Prr *= 0.5;
                     }
                 }
                 
                 // second mate
                 position = get<2>(record);
+                seq = get<5>(record);
                 for (int j = 0; j < read_len && j + position < transcript_len; ++j) {
-                    if (pairs.seqs[n][j] != transcripts.seqs[i][position + j]) {
+                    if (seq[j] != toupper(transcripts.seqs[i][position + j])) {
                         Prf *= 0.5;
                     }
                     
-                    if (reverse_complement(pairs.seqs[n][j]) != toupper(transcripts.seqs[i][position + j])) {
+                    if (reverse_complement(seq[j]) != 
+                            toupper(transcripts.seqs[i][position + j])) {
                         Prr *= 0.5;
                     }
                 }                
                 
+                double insert_prob = prob_normal(params.insert_mean, params.insert_stdev, get<3>(record));
+                Prf *= insert_prob / norm_factors[i]; // insert size normalized
+                Prr *= insert_prob / norm_factors[i];
+
                 P_sum += Prf * 0.5; // orientation probability
                 P_sum += Prr * 0.5;
-
-                if (P_sum < 1e-9) {
-                    cout << "A suspicious P_sum: " << P_sum << endl;
-                }
                 v.emplace_back(P_sum);            
             }
             posteriors.emplace_back(v);
@@ -341,7 +383,7 @@ void isomorph::RsemEstimator::precalc_posteriors(const EMParams& params,
     return;
 }
 
-void isomorph::RsemEstimator::EMAlgorithm(EMParams& params, EMResult& result) {
+void isomorph::EMEstimator::EMAlgorithm(EMParams& params, EMResult& result) {
     auto& transcripts = params.transcripts;
     auto& reads = params.reads;
     auto& qNameToID = params.qNameToID;
@@ -392,7 +434,7 @@ void isomorph::RsemEstimator::EMAlgorithm(EMParams& params, EMResult& result) {
             for (int i = 0; i < num_transcripts; ++i) {
                 expressions[i] = pre_m_expressions[i] / params.eff_num_reads;   
             }
-        } while (++iter < 1000);
+        } while (++iter < 2000);
     } else {
         auto& paired_reads = params.paired_reads;
         do {
@@ -425,18 +467,19 @@ void isomorph::RsemEstimator::EMAlgorithm(EMParams& params, EMResult& result) {
             for (int i = 0; i < num_transcripts; ++i) {
                 expressions[i] = pre_m_expressions[i] / params.eff_num_reads;
             }
-        } while (++iter < 1000);   
+        } while (++iter < 2000);   
     }
     
     for (int i = 0; i < num_transcripts; ++i) {
         result.relative_expressions.emplace_back(expressions[i]);
     }
+    
     cerr << "EM is done." << endl;
 }
 
-void isomorph::RsemEstimator::output_result(const FastAData& transcripts, 
-                                            const EMResult& result, 
-                                            const string filename) {
+void isomorph::EMEstimator::output_result(const FastAData& transcripts, 
+                                          const EMResult& result, 
+                                          const string filename) {
     
     cerr << "Outputing results." << endl;                                                
     ofstream output;
