@@ -1,22 +1,23 @@
 /** @file utility.cpp
 @author Pavlovic:Dario
 @version Revision 0.2
-@brief Utility data and functions used by other classes are implemented here. 
+@brief Utility data and functions used by other classes are implemented here.
 @date Tuesday, June 16, 2015
 */
+
+#include <seqan/bam_io.h>
+#include <seqan/seq_io.h>
+#include <seqan/sequence.h>
 
 #include <ctype.h>
 #include <cstdio>
 #include <cmath>
 #include <iostream>
 #include <string>
+#include <utility>
 #include <vector>
 
-#include <seqan/bam_io.h>
-#include <seqan/seq_io.h>
-#include <seqan/sequence.h>
-
-#include "utility.h"
+#include "./utility.h"
 
 using namespace std;
 using namespace seqan;
@@ -29,17 +30,16 @@ std::string isomorph::execute_command(const char* cmd) {
     if (!pipe) return "ERROR";
     char buffer[128];
     std::string result = "";
-    while(!feof(pipe)) {
-        if(fgets(buffer, 128, pipe) != NULL)
+    while (!feof(pipe)) {
+        if (fgets(buffer, 128, pipe) != NULL)
             result += buffer;
     }
     pclose(pipe);
-    return result;    
+    return result;
 }
 
 void isomorph::estimate_insert_size(const SamData& alignments,
                           std::pair<double, double>& params) {
-
     double mean = 0;
     int num_aligns = 0;
 
@@ -51,12 +51,12 @@ void isomorph::estimate_insert_size(const SamData& alignments,
     }
 
     mean /= num_aligns;
-    double var = 0;    
+    double var = 0;
     for (auto record : alignments.records) {
         if (hasFlagAllProper(record) && hasFlagFirst(record)) {
             int a = record.tLen - mean;
             var += a * a;
-        }        
+        }
     }
 
     var /= (num_aligns-1);
@@ -70,16 +70,16 @@ void isomorph::run_alignment(const string& reads,
                              const string& aligner_path,
                              const string& output_dir,
                              const bool paired_end) {
-    
     string aligner;
-    if (aligner_path=="") {
+    if (aligner_path == "") {
         aligner = "bowtie2";
     } else {
         aligner = aligner_path;
     }
-    
+
     // builds bowtie index
-    string command = "bowtie2-build -f " + transcripts + " " + output_dir + "/isomorph-bowtie-index";
+    string command = "bowtie2-build -f " + transcripts + " " +
+                      output_dir + "/isomorph-bowtie-index";
     execute_command(command.c_str());
 
     // runs the alignment
@@ -94,13 +94,12 @@ void isomorph::run_alignment(const string& reads,
                    --score-min L,0,-0.1 -p 1 -k 200 -x " + output_dir + "/isomorph-bowtie-index -U " + reads +
                    " -S " + output_dir + "/isomorph.sam";
     }
-    
-    execute_command(command.c_str());                         
+
+    execute_command(command.c_str());
 }
 
 void isomorph::print_sam_alignment_records(
         const std::vector<BamAlignmentRecord>& records) {
-
     for (auto record : records) {
         std::cout << "###############" << std::endl;
         std::cout << "Name: " << record.qName << std::endl;
@@ -139,12 +138,11 @@ int isomorph::Reader::read_sam(CharString filename,
     return 0;
 }
 
-/* 
+/*
     Reads and returns fasta file sequences.
 */
-int isomorph::Reader::read_fasta(CharString filename, 
+int isomorph::Reader::read_fasta(CharString filename,
                FastAData* data) {
-    
     SeqFileIn seqFileIn;
     if (!open(seqFileIn, toCString(filename))) {
         std::cerr << "ERROR: Could not open the file " << filename << std::endl;
@@ -166,7 +164,6 @@ int isomorph::Reader::read_fasta(CharString filename,
 */
 int isomorph::Reader::read_fastq(CharString filename,
                FastQData* data) {
-
     SeqFileIn seqFileIn;
     if (!open(seqFileIn, toCString(filename))) {
         std::cerr << "ERROR: Could not open the file " << filename << std::endl;
