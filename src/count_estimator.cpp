@@ -90,7 +90,7 @@ void isomorph::CountEstimator::calculate_read_count(const AlgoParams& params,
     cerr << "Calculating read counts." << endl;
     // calculates the counts
     auto ids = params.transcripts.ids;
-    vector<int64> counts(length(ids), 0);
+    vector<int64_t> counts(length(ids), 0);
     auto records = params.alignments.records;
     unordered_set<string> used_reads;
     double counts_sum = 0;
