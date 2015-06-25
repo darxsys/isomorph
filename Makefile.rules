@@ -12,8 +12,8 @@ OBJ = $(subst $(SRC_DIR), $(OBJ_DIR), $(addsuffix .o, $(basename $(SRC))))
 
 
 LDFLAGS+=-lrt
-CXXFLAGS+=-I../../seqan/include
-CXXFLAGS+=-I../../seqan/include
+CXXFLAGS+=-I../seqan/include
+CXXFLAGS+=-I../seqan/include
 
 default: all
 all: $(NAME)
