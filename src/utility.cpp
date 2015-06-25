@@ -85,12 +85,12 @@ void isomorph::run_alignment(const string& reads,
     // runs the alignment
     // parameters are set to be the same as in RSEM with bowtie2
     if (paired_end) {
-        command = aligner_path + " -q --phred33 --sensitive --dpad 0 --gbar 99999999 --mp 1,1 --np 1 \
+        command = aligner + " -q --phred33 --sensitive --dpad 0 --gbar 99999999 --mp 1,1 --np 1 \
                   --score-min L,0,-0.1 -I 1 -X 1000 --no-mixed --no-discordant \
                   -p 1 -k 200 -x " + output_dir + "/isomorph-bowtie-index -1 " + reads + " -2 " +
                   pairs + " -S " + output_dir + "/isomorph.sam";
     } else {
-        command = aligner_path + " -q --phred33 --sensitive --dpad 0 --gbar 99999999 --mp 1,1 --np 1 \
+        command = aligner + " -q --phred33 --sensitive --dpad 0 --gbar 99999999 --mp 1,1 --np 1 \
                    --score-min L,0,-0.1 -p 1 -k 200 -x " + output_dir + "/isomorph-bowtie-index -U " + reads +
                    " -S " + output_dir + "/isomorph.sam";
     }

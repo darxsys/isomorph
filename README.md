@@ -10,7 +10,8 @@ fit the needs of our own lab and will in the future be changed and rewritten.
 
 Isomorph currently relies on [bowtie2](http://bowtie-bio.sourceforge.net/bowtie2/index.shtml) and 
 [seqan](https://github.com/seqan/seqan) open-source library.
-bowtie2 has to be included in your PATH or you can provide bowtie path directly to isomorph.
+bowtie2 has to be included in your `PATH` or you can provide bowtie path directly to isomorph.
+If not provided, isomorph will assume it is in the `PATH`.
 Seqan should be placed inside the isomorph directory and named only seqan (without any version number).
 To install it, just do `git clone` on seqan repository into the isomorph folder. 
 
