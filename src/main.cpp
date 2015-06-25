@@ -53,6 +53,7 @@ struct Args {
     CharString reads;
     CharString pairs;
     CharString transcripts;
+    CharString bowtie_path;
     bool use_count;
 };
 
@@ -75,8 +76,10 @@ int parse_arguments(int argc, char** argv, Args& args) {
     addOption(parser, ArgParseOption(
         "T", "transcripts", "Transcript file.",
         ArgParseArgument::STRING, "STRING"));
-    
-    
+    addOption(parser, ArgParseOption(
+        "B", "bowtie-path", "Path to bowtie executable",
+        ArgParseArgument::STRING, "STRING"));
+
     setRequired(parser, "R");
     setRequired(parser, "T");
 
@@ -99,6 +102,9 @@ int parse_arguments(int argc, char** argv, Args& args) {
         
     getOptionValue(args.transcripts, parser, "transcripts");
     args.use_count = isSet(parser, "count"); 
+
+    setDefaultValue(parser, "bowtie-path", "");
+    getOptionValue(args.bowtie_path, parser, "bowtie-path");
     return 0;   
 }
 
@@ -112,10 +118,16 @@ int main(int argc, char** argv) {
     
     if (args.use_count) {
         CountEstimator estimator;
-        estimator.estimate_abundances(args.reads, args.transcripts, args.pairs);
+        estimator.estimate_abundances(args.reads, 
+                                      args.transcripts,
+                                      args.bowtie_path, 
+                                      args.pairs);
     } else {
         EMEstimator estimator;
-        estimator.estimate_abundances(args.reads, args.transcripts, args.pairs);
+        estimator.estimate_abundances(args.reads,
+                                      args.transcripts,
+                                      args.bowtie_path,
+                                      args.pairs);
     }
 
     return 0;

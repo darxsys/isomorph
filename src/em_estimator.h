@@ -34,9 +34,10 @@ namespace isomorph {
             @param transcripts path to the reconstructed transcripts fasta file
             @param pairs path to the paired end file, if paired reads are used
         */      
-       virtual void estimate_abundances(seqan::CharString left_pairs, 
-                                        seqan::CharString right_pairs,
-                                        seqan::CharString transcripts);
+       virtual void estimate_abundances(seqan::CharString reads, 
+                                        seqan::CharString transcripts,
+                                        seqan::CharString aligner_path,
+                                        seqan::CharString pairs="");
     private:
         /**
          * The struct encapsulates all the parameters used by EM algorithm and passed to it from the outside.
@@ -114,6 +115,7 @@ namespace isomorph {
         void preprocess_data(const seqan::CharString& transcripts, 
                              const seqan::CharString& reads,
                              const seqan::CharString& pairs,
+                             const seqan::CharString& aligner_path,
                              const std::string& output_dir, 
                              EMParams& params);
         /**

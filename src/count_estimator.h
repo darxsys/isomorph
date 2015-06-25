@@ -36,6 +36,7 @@ namespace isomorph {
         */        
         virtual void estimate_abundances(seqan::CharString reads, 
                                          seqan::CharString transcripts,
+                                         seqan::CharString aligner_path,                                         
                                          seqan::CharString pairs="");
                                          
     private:
@@ -98,6 +99,7 @@ namespace isomorph {
         void preprocess_data(const seqan::CharString& transcripts,
                              const seqan::CharString& reads,
                              const seqan::CharString& pairs,
+                             const seqan::CharString& aligner_path,
                              const std::string& output_dir,
                              AlgoParams& params);
         

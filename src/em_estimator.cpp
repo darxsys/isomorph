@@ -31,6 +31,7 @@ using namespace std;
 
 void isomorph::EMEstimator::estimate_abundances(CharString reads,
                                                 CharString transcripts,
+                                                CharString aligner_path,
                                                 CharString pairs) {
     
     string dir = "isomorph-tmp";
@@ -40,6 +41,7 @@ void isomorph::EMEstimator::estimate_abundances(CharString reads,
     preprocess_data(transcripts, 
                     reads, 
                     pairs,
+                    aligner_path,
                     dir, 
                     params);
 
@@ -56,8 +58,9 @@ void isomorph::EMEstimator::estimate_abundances(CharString reads,
 void isomorph::EMEstimator::preprocess_data(const CharString& transcripts, 
                                             const CharString& reads,
                                             const CharString& pairs,
+                                            const CharString& aligner_path,                                            
                                             const string& output_dir, 
-                                             EMParams& params) {
+                                            EMParams& params) {
     
     cerr << "Preprocessing data." << endl;
     bool paired_end = pairs == CharString("") ? false : true;
@@ -66,10 +69,12 @@ void isomorph::EMEstimator::preprocess_data(const CharString& transcripts,
     string transcripts_str(toCString(transcripts)); 
     string reads_str(toCString(reads));
     string pairs_str(toCString(pairs));
+    string aligner_path_str(toCString(aligner_path));
     
     run_alignment(reads_str, 
                   pairs_str, 
-                  transcripts_str, 
+                  transcripts_str,
+                  aligner_path_str, 
                   output_dir, 
                   paired_end);
 
