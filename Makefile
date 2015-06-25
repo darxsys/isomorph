@@ -1,15 +1,14 @@
 default: all
 
-all: debug release
+all: release
 
-debug:
-	$(MAKE) -C debug
+docs:
+	doxygen Doxyfile
 
 release:
 	$(MAKE) -C release
 
 clean:
-	$(MAKE) -C debug clean
 	$(MAKE) -C release clean
 
-.PHONY: default all debug release clean
+.PHONY: default all docs release clean

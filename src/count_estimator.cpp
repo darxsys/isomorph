@@ -24,6 +24,7 @@ using namespace std;
 
 void isomorph::CountEstimator::estimate_abundances(CharString reads,
                                                    CharString transcripts,
+                                                   CharString aligner_path,
                                                    CharString pairs) {
                                                        
     string dir = "isomorph-tmp";
@@ -35,6 +36,7 @@ void isomorph::CountEstimator::estimate_abundances(CharString reads,
     preprocess_data(transcripts, 
                     reads, 
                     pairs,
+                    aligner_path,
                     dir,
                     params);
    
@@ -49,6 +51,7 @@ void isomorph::CountEstimator::estimate_abundances(CharString reads,
 void isomorph::CountEstimator::preprocess_data(const CharString& transcripts,
                                                const CharString& reads,
                                                const CharString& pairs,
+                                               const CharString& aligner_path,
                                                const string& output_dir,
                                                AlgoParams& params) {
     
@@ -66,10 +69,12 @@ void isomorph::CountEstimator::preprocess_data(const CharString& transcripts,
     string transcripts_str(toCString(transcripts)); 
     string left_pairs_str(toCString(reads));
     string right_pairs_str(toCString(pairs));
+    string aligner_str(toCString(aligner_path));
 
     run_alignment(left_pairs_str, 
                   right_pairs_str, 
                   transcripts_str, 
+                  aligner_str,
                   output_dir, 
                   paired_end);
 

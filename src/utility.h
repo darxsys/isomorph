@@ -88,6 +88,7 @@ namespace isomorph {
     void run_alignment(const std::string& reads,
                        const std::string& pairs,
                        const std::string& transcripts,
+                       const std::string& aligner_path,
                        const std::string& output_dir,
                        const bool paired_end);
 

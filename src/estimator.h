@@ -26,9 +26,11 @@ namespace isomorph {
             @param reads path to the reads fastq file
             @param transcripts path to the transcripts fasta file
             @param pairs path to the paired end fastq file, if used
+            @param aligner_path path to the aligner used (only bowtie supported for now)
         */
         virtual void estimate_abundances(seqan::CharString reads, 
                                          seqan::CharString transcripts,
+                                         seqan::CharString aligner_path,
                                          seqan::CharString pairs="")=0;
     };
 }

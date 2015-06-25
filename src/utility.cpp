@@ -67,8 +67,16 @@ void isomorph::estimate_insert_size(const SamData& alignments,
 void isomorph::run_alignment(const string& reads,
                              const string& pairs,
                              const string& transcripts,
+                             const string& aligner_path,
                              const string& output_dir,
                              const bool paired_end) {
+    
+    string aligner;
+    if (aligner_path=="") {
+        aligner = "bowtie2";
+    } else {
+        aligner = aligner_path;
+    }
     
     // builds bowtie index
     string command = "bowtie2-build -f " + transcripts + " " + output_dir + "/isomorph-bowtie-index";
@@ -77,12 +85,12 @@ void isomorph::run_alignment(const string& reads,
     // runs the alignment
     // parameters are set to be the same as in RSEM with bowtie2
     if (paired_end) {
-        command = "bowtie2 -q --phred33 --sensitive --dpad 0 --gbar 99999999 --mp 1,1 --np 1 \
+        command = aligner_path + " -q --phred33 --sensitive --dpad 0 --gbar 99999999 --mp 1,1 --np 1 \
                   --score-min L,0,-0.1 -I 1 -X 1000 --no-mixed --no-discordant \
                   -p 1 -k 200 -x " + output_dir + "/isomorph-bowtie-index -1 " + reads + " -2 " +
                   pairs + " -S " + output_dir + "/isomorph.sam";
     } else {
-        command = "bowtie2 -q --phred33 --sensitive --dpad 0 --gbar 99999999 --mp 1,1 --np 1 \
+        command = aligner_path + " -q --phred33 --sensitive --dpad 0 --gbar 99999999 --mp 1,1 --np 1 \
                    --score-min L,0,-0.1 -p 1 -k 200 -x " + output_dir + "/isomorph-bowtie-index -U " + reads +
                    " -S " + output_dir + "/isomorph.sam";
     }
